@@ -283,7 +283,7 @@ qplot(x = friend_count, y = ..count../sum(..count..),
       xlab = 'Friend count', 
       ylab = 'Proportion of users with that friend count',
       geom = 'freqpoly', color = gender) + 
-    scale_x_continuous(lim = c(500, 1000), breaks = seq(500, 1000, 50))
+    scale_x_continuous(lim = c(0, 1000), breaks = seq(0, 1000, 50))
 ```
 
 ***
