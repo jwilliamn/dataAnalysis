@@ -34,15 +34,59 @@ ggplot(aes(x = price), data = diamonds) +
     geom_histogram(binwidth = 100, color = I('black'), fill = I('#099DD9')) + 
     scale_x_continuous(limits = c(0, 10000), breaks = seq(0, 10000, 1000)) + 
     facet_wrap(~cut, scales = "free_y")
+
 ggsave("diamonds.png")
 
 # Which cut has the highest priced diamond?
 by(diamonds$price, diamonds$cut, max)
 
 # Adding different effects for a better visualization
-ggplot(aes(x = price), data = diamonds) + 
-    geom_histogram(binwidth = 100, color = I('black'), fill = I('#099DD9'), 
-                   aes(y = ..density..)) + 
-    geom_density() + 
+ggplot(aes(x = price, fill = cut), data = diamonds) + 
+    geom_histogram(binwidth = 200, color = I('black')) + 
     scale_x_continuous(limits = c(0, 10000), breaks = seq(0, 10000, 1000)) + 
     facet_wrap(~cut, scales = "free_y")
+
+# Price per carat by cut
+ggplot(aes(x = price/carat), data = diamonds) + 
+    geom_histogram(binwidth = 0.05, color = I('black'), fill = I('#099DD9')) + 
+    scale_x_log10() + 
+    facet_wrap(~cut, scales = "free_y")
+
+# Price of diamonds using box plots
+# Price by cut
+ggplot(data = diamonds, aes(x = cut, y = price, fill = cut)) + 
+    geom_boxplot() + 
+    coord_cartesian(ylim = c(0, 8000))
+by(diamonds$price, diamonds$cut, summary)
+
+# Price by clarity
+ggplot(data = diamonds, aes(x = clarity, y = price, fill = clarity)) + 
+    geom_boxplot() + 
+    coord_cartesian(ylim = c(0, 8000))
+by(diamonds$price, diamonds$clarity, summary)
+
+# Price by color
+ggplot(data = diamonds, aes(x = color, y = price, fill = color)) + 
+    geom_boxplot() + 
+    coord_cartesian(ylim = c(0, 8000))
+by(diamonds$price, diamonds$color, summary)
+
+# Calc. IQR
+IQR(subset(diamonds, color == "D")$price)
+IQR(subset(diamonds, color == "J")$price)
+
+# Price per carat box plots by color
+ggplot(data = diamonds, aes(x = color, y = price/carat, fill = color)) + 
+    geom_boxplot() + 
+    coord_cartesian(ylim = c(0, 8000))
+by(diamonds$price/diamonds$carat, diamonds$color, summary)
+
+# Ralationship among price, carat and color of diamonds
+ggplot(data=diamonds, aes(x=carat, y=price, col=color)) + 
+    theme_bw() + 
+    geom_point(size = 2, alpha = 1) +
+    scale_colour_brewer(palette="Accent") +
+    ggtitle("The relationship among 'price', 'carat' and 'color' of diamonds")
+
+# Carat frequency polygon
+
