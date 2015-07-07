@@ -2,12 +2,12 @@
 library(ISLR)
 
 # Loading data
-data(Smarket)
-attach(Smarket)
-names(Smarket)
+data(Default)
+attach(Default)
+names(Default)
 
-Data <- Smarket
-rm(Smarket)
+Data <- Default
+rm(Default)
 
 # Data pre-processing
 ## Converting non-numeric features to numeric
@@ -19,8 +19,11 @@ for(c in 1:dim(Data)[2]){
 }
 
 ## Identifying the predictors X, the response Y & size of the target data
+### number of the column response Y
+cy <- 1
+
 X <- data.matrix(Data[,2:3])
-Y <- data.matrix(Data[,9])
+Y <- data.matrix(Data[,cy])
 m <- dim(X)[1]
 n <- dim(X)[2]
 
@@ -30,7 +33,7 @@ mu <- c()
 sigma <- c(0)
 pi <- c()
 for(i in 1:k){
-    subData <- Data[Data[,9] == i,]
+    subData <- Data[Data[,cy] == i,]
     Xi <- data.matrix(subData[,2:3])
     mu <- rbind(mu, sapply(subData[,2:3], mean))
     mui <- matrix(rep(mu[i,], each=dim(Xi)[1]), nrow = dim(Xi)[1])
@@ -59,4 +62,10 @@ for(i in 1:m){
 }
 
 table(lda.fit)
+
+# Computing the coefficients of linear discriminants (decision boundary between classes)
+
+solve(sigma)%*%t(matrix(mu[2,], nrow = 1) - matrix(mu[1,], nrow = 1))
+
+
 
