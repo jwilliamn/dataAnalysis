@@ -1,49 +1,62 @@
-# Linear discriminant analysis on stock market
+# Linear discriminant analysis - Default on credit card payments
 library(ISLR)
 
-setwd('/home/williamn/Repository/finance')
-
 # Loading data
-data(Default)
-attach(Default)
-names(Default)
+data(Smarket)
+attach(Smarket)
+names(Smarket)
 
-head(Default)
+Data <- Smarket
+rm(Smarket)
 
-# Estimating muk, pik, and variance
-
-# Converting non-numeric features to numeric
-levels(Default[, 2])[levels(Default[, 2]) == "No"] <- "0"
-levels(Default[, 1])[levels(Default[, 1]) == "Yes"] <- "1"
-Default[, 2] <- as.numeric(Default[, 2])
-
-k <- 2
-X <- Default[,2:4]
-X <- data.matrix(X)
-Y <- Default[,1]
-Y <- data.matrix(Y)
-mu <- data.frame()
-pi <- c()
-for(i in 1:k){
-    tmp <- Default[Default$default == i,]
-    mu <- rbind(mu, sapply(tmp[,2:dim(tmp)[2]], mean))
-    pi <- rbind(pi, dim(tmp)[1]/dim(Default)[1])
-}
-sigma <- cov(X)
-
-mu1 <- mu[1,]
-mu2 <- mu[2,]
-mu1 <- data.matrix(mu1)
-mu2 <- data.matrix(mu2)
-delta1 <- X%*%solve(sigma)%*%t(mu1) - as.numeric(0.5*mu1%*%solve(sigma)%*%t(mu1)) + log(pi[1])
-delta2 <- X%*%solve(sigma)%*%t(mu2) - as.numeric(0.5*mu2%*%solve(sigma)%*%t(mu2)) + log(pi[2])
-delta <- c()
-for(j in 1:dim(Default)[1]){
-    if(delta1[j] >= delta2[j]){
-        delta <- rbind(delta, c(1))
-    }else{
-        delta <- rbind(delta, c(2))
+# Data pre-processing
+## Converting non-numeric features to numeric
+isf <- sapply(Data, is.factor)
+for(c in 1:dim(Data)[2]){
+    if(isf[c] == T){
+        Data[,c] <- as.numeric(Data[,c])
     }
 }
 
+## Identifying the predictors X, the response Y & size of the target data
+X <- data.matrix(Data[,2:3])
+Y <- data.matrix(Data[,9])
+m <- dim(X)[1]
+n <- dim(X)[2]
+
+# Estimating muk, pik and the covariance
+k <- 2
+mu <- c()
+sigma <- c(0)
+pi <- c()
+for(i in 1:k){
+    subData <- Data[Data[,9] == i,]
+    Xi <- data.matrix(subData[,2:3])
+    mu <- rbind(mu, sapply(subData[,2:3], mean))
+    mui <- matrix(rep(mu[i,], each=dim(Xi)[1]), nrow = dim(Xi)[1])
+    sigma <- sigma + t(Xi - mui)%*%(Xi - mui)/(m-k)
+    pi <- rbind(pi, dim(Xi)[1]/m)
+}
+
+# Computing the discriminant function delta^
+delta <- c()
+ld <- c()
+for(d in 1:k){
+    mui <- matrix(mu[d,], nrow = 1)
+    di <- X%*%solve(sigma)%*%t(mui) - as.numeric(0.5*mui%*%solve(sigma)%*%t(mui)) + log(pi[d])
+    ld <- cbind(ld, solve(sigma)%*%t(mui))
+    delta <- cbind(delta, di)
+}
+
+# Classifying the observations
+lda.fit <- c()
+for(i in 1:m){
+    if(delta[i,1] >= delta[i,2]){
+        lda.fit <- rbind(lda.fit, c(1))
+    }else{
+        lda.fit <- rbind(lda.fit, c(2))
+    }
+}
+
+table(lda.fit)
 
