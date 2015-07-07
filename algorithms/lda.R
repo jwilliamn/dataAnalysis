@@ -53,14 +53,26 @@ for(d in 1:k){
 
 # Classifying the observations
 lda.fit <- c()
+p_no <- c(0)
+p_yes <- c(0)
+p_ny <- c(0)
+p_yn <- c(0)
 for(i in 1:m){
     if(delta[i,1] >= delta[i,2]){
         lda.fit <- rbind(lda.fit, c(1))
+        if(lda.fit[i] == Y[i]){ p_no <- p_no +1}
+        else{ p_ny <- p_ny +1}
     }else{
         lda.fit <- rbind(lda.fit, c(2))
+        if(lda.fit[i] == Y[i]){ p_yes <- p_yes +1}
+        else{ p_yn <- p_yn +1}
     }
 }
 
+cm <- rbind(c(p_no,p_ny), c(p_yn, p_yes))
+colnames(cm) <- c("No", "Yes")
+rownames(cm) <- c("No", "Yes")
+cm
 table(lda.fit)
 
 # Computing the coefficients of linear discriminants (decision boundary between classes)
