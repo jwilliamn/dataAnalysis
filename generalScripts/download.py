@@ -1,4 +1,4 @@
-# Python script to download financial information from NYSE - finance morningstar webpage
+# Python script to download financial information from NYSE - financials.morningstar.com webpage
 import urllib2
 import csv
 import StringIO
@@ -17,13 +17,14 @@ filename = request.info()
 data = request.read()
 
 f = StringIO.StringIO(data)
-print f[1]
 reader = csv.reader(f)
+
 new_file = open(stock + '_' + rtype + '.csv', 'w')
 f_writer = csv.writer(new_file)
 
-print new_file
+#print new_file
 
 for row in reader:
-    #f_writer.writerow(row)
-    print row
+    if len(row) != 1:
+        f_writer.writerow(row)
+        print row
