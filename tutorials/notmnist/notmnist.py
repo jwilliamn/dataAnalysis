@@ -1,6 +1,7 @@
 """ notMNIST assignment 1
 	from Udacity
-	Deep Learning course"""
+	Deep Learning course
+	data preprocessing"""
 
 from __future__ import print_function
 import matplotlib.pyplot as plt 
@@ -8,6 +9,7 @@ import numpy as np
 import os 
 import sys
 import tarfile
+import random as ran
 
 from scipy.misc.pilutil import imread
 from scipy import ndimage
@@ -159,7 +161,7 @@ def make_arrays(nb_rows, img_size):
 		labels = np.ndarray(nb_rows, dtype=np.int32)
 	else:
 		dataset, labels = None, None
-		return dataset, labels
+	return dataset, labels
 
 def merge_datasets(pickle_files, train_size, valid_size=0):
   	num_classes = len(pickle_files)
@@ -204,3 +206,54 @@ _, _, test_dataset, test_labels = merge_datasets(test_datasets, test_size)
 print('Training:', train_dataset.shape, train_labels.shape)
 print('Validation:', valid_dataset.shape, valid_labels.shape)
 print('Testing:', test_dataset.shape, test_labels.shape)
+
+
+# Randomizing the data
+
+def randomize(dataset, labels):
+	permutation = np.random.permutation(labels.shape[0])
+	shuffled_dataset = dataset[permutation,:,:]
+	shuffled_labels = labels[permutation]
+	return shuffled_dataset, shuffled_labels
+
+train_dataset, train_labels = randomize(train_dataset, train_labels)
+test_dataset, test_labels = randomize(test_dataset, test_labels)
+valid_dataset, valid_labels = randomize(valid_dataset, valid_labels)
+
+
+# Problem 4 ####
+# visualizing
+ran_image = ran.randint(0, train_dataset.shape[0])
+print('Random label ' + str(train_labels[ran_image]))
+print('Random image')
+print(train_dataset[ran_image])
+label = train_labels[ran_image]
+image = train_dataset[ran_image]
+#label = train_labels[ran_image].argmax(axis=0)
+#image = train_dataset[ran_image].reshape([28,28])
+plt.title('Example: %d Label: %d' % (ran_image, label))
+plt.imshow(image, cmap=plt.get_cmap('gray_r'))
+plt.show()
+
+
+# Saving the data for later reuse
+pickle_file = os.path.join(data_root, 'notMNIST.pickle')
+
+try:
+	f = open(pickle_file, 'wb')
+	save = {
+		'train_dataset': train_dataset,
+		'train_labels': train_labels,
+		'valid_dataset': valid_dataset,
+		'valid_labels': valid_labels,
+		'test_dataset': test_dataset,
+		'test_labels': test_labels,
+	}
+	pickle.dump(save, f, pickle.HIGHEST_PROTOCOL)
+	f.close()
+except Exception as e:
+	print('Unable to save data to', pickle_file, ':', e)
+	raise
+
+statinfo = os.stat(pickle_file)
+print('Compressed pickle size:', statinfo.st_size)
