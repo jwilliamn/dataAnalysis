@@ -1,7 +1,12 @@
-""" notMNIST assignment 1
-	from Udacity
-	Deep Learning course
-	data preprocessing"""
+""" 
+
+Not MNIST assignment 1
+From Udacity
+Deep Learning course
+Data preprocessing
+Starter code provided
+
+"""
 
 from __future__ import print_function
 import matplotlib.pyplot as plt 

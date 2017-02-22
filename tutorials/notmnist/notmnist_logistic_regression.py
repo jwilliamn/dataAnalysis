@@ -1,7 +1,12 @@
-""" Not Mnist assignment 1
-	from Udacity
-	Deep Learning course
-	Learning with logistic regression"""
+""" 
+
+Not Mnist assignment 1
+from Udacity
+Deep Learning course
+Learning with logistic regression
+Own implementation
+
+"""
 
 import tensorflow as tf
 import numpy as np
