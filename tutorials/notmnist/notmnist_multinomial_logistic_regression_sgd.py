@@ -3,7 +3,8 @@
 Not Mnist assignment 1
 from Udacity
 Deep Learning course
-Learning with logistic regression
+Algorithm used: multinomial logistic regression
+Optimizer used: Stochastic gradient descent
 Own implementation
 
 """

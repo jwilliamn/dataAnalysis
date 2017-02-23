@@ -3,7 +3,8 @@
 Not Mnist assignment 2: SGD
 from Udacity
 Deep Learning course
-algorithm used: Stochastic gradient descent
+algorithm used: multinomial logistic regression
+optimizer used: gradient descent & Stochastic gradient descent
 Starter code provided
 
 """
@@ -122,6 +123,7 @@ with tf.Session(graph=graph) as session:
 
 
 
+
 # Stochastic gradient descent training. It's much faster
 batch_size = 128
 
@@ -169,6 +171,9 @@ with tf.Session(graph=graph) as session:
 		# and the value is the numpy array to feed to it.
 		feed_dict = {tf_train_dataset : batch_data, tf_train_labels : batch_labels}
 		_, l, predictions = session.run([optimizer, loss, train_prediction], feed_dict=feed_dict)
+
+		print(type(l))
+
 		if (step % 500 == 0):
 			print("Minibatch loss at step %d: %f" % (step, l))
 			print("Minibatch accuracy: %.1f%%" % accuracy(predictions, batch_labels))
