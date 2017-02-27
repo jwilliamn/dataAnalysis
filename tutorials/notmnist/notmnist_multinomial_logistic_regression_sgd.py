@@ -91,7 +91,7 @@ logits = tf.matmul(X, w) + b
 # use the method:
 # tf.nn.softmax_cross_entropy_with_logits(logits, Y)
 # then use tf.reduce_mean to get the mean loss of the batch
-entropy = tf.nn.softmax_cross_entropy_with_logits(logits, Y)
+entropy = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=Y)
 loss = tf.reduce_mean(entropy)   # computes the mean  over examples in the batch
 
 

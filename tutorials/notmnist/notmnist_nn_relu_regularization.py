@@ -1,10 +1,12 @@
 """ 
 
-Not Mnist assignment 2
+Not Mnist assignment 3
 from Udacity
 Deep Learning course
-Task: Turn the multinomial logistic regression into a 1-hidden layer neural network
-	with rectified linear units and 1024 nodes
+Task: 1. Introduce and tune L2 regularization.
+	  2. Demonstrate an extreme case of overfitting.
+	  3. Introduce dropout on the hidden layer.
+	  4. Try to get the best performance over 97.1%
 Algorithm used: 1-hidden layer neural network
 Optimizer used: Stochastic gradient descent
 Own implementation
@@ -29,6 +31,8 @@ n_hidden = 1024  # hidden layer number of features
 n_input = 784  # Not Mnist data input (img shape: 28*28)
 n_classes = 10  # Not Mnist total classes (a - j)
 
+# Regularization
+beta = 0.01
 
 # Step 1: Read in data
 pickle_file = '/home/williamn/Repository/data/notmnist/notMNIST.pickle'
@@ -117,6 +121,9 @@ logits = one_hidden_layer_nn(X, weights, biases)
 # then use tf.reduce_mean to get the mean loss of the batch
 entropy = tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=Y)
 loss = tf.reduce_mean(entropy)   # computes the mean  over examples in the batch
+loss = (loss + 
+		beta*tf.nn.l2_loss(weights['w1']) + 
+		beta*tf.nn.l2_loss(weights['w2'])) # task 1. Introducing regularization
 
 
 # Step 6: define training op
@@ -125,7 +132,7 @@ optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minim
 
 with tf.Session() as sess:
 	# to visualize using TensorBoard
-	writer = tf.summary.FileWriter('./graphs/one_hidden_layer_nn', sess.graph)
+	writer = tf.summary.FileWriter('./graphs/one_hidden_layer_regularization_nn', sess.graph)
 
 	start_time = time.time()
 	sess.run(tf.global_variables_initializer())	
