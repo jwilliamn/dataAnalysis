@@ -23,7 +23,7 @@ import pickle
 
 # Define paramaters for the model
 learning_rate = 0.01 # 0.01
-batch_size = 100
+batch_size = 100  # 100 - 10000) Task 2. Restrict training data to a few batches
 n_epochs = 15
 
 # Network Parameters
@@ -86,6 +86,9 @@ plt.show()
 X = tf.placeholder(tf.float32, [batch_size, 784], name='X_placeholder')
 Y = tf.placeholder(tf.float32, [batch_size, 10], name='Y_placeholder')
 
+keep_prob = tf.placeholder(tf.float32) # probability that a neuron's output is kept during
+									   # dropout
+
 # Step 3: create weights and bias
 # weights and biases are initialized to 0
 # shape of w depends on the dimension of X and the next layer (i.e so that Y = X * w + b)
@@ -105,14 +108,28 @@ biases = {
 # the model that returns the logits.
 # this logits will be later passed through softmax layer
 # to get the probability distribution of possible label of the image
-def one_hidden_layer_nn(X, weights, biases):
+def one_hidden_layer_nn(X, weights, biases, keep_prob):
+	# Hidden layer with RELU activation
+	h_layer = tf.matmul(X, weights['w1']) + biases['b1']
+	h_layer = tf.nn.relu(h_layer)
+
+	h_layer_drop = tf.nn.dropout(h_layer, keep_prob)  # Task 3. Introduce dropout
+	#o_layer = tf.matmul(h_layer, weights['w2']) + biases['b2']
+	o_layer = tf.matmul(h_layer_drop, weights['w2']) + biases['b2']
+	return o_layer
+
+logits = one_hidden_layer_nn(X, weights, biases, keep_prob)
+
+# Model that takes trained weights and biases for validation and test prediction
+def one_hidden_layer_no_dropout_nn(X, weights, biases):
 	# Hidden layer with RELU activation
 	h_layer = tf.matmul(X, weights['w1']) + biases['b1']
 	h_layer = tf.nn.relu(h_layer)
 	o_layer = tf.matmul(h_layer, weights['w2']) + biases['b2']
 	return o_layer
 
-logits = one_hidden_layer_nn(X, weights, biases)
+logitsValid = one_hidden_layer_no_dropout_nn(X, weights, biases)
+
 
 # Step 5: define loss function
 # use cross entropy loss of the real labels with the softmax of logits
@@ -145,7 +162,7 @@ with tf.Session() as sess:
 			X_batch = train_dataset[j*batch_size:(j+1)*batch_size,]
 			Y_batch = train_labels[j*batch_size:(j+1)*batch_size,]
 			# TO-DO: run optimizer + fetch loss_batch
-			_, loss_batch = sess.run([optimizer, loss], feed_dict={X:X_batch, Y:Y_batch})
+			_, loss_batch = sess.run([optimizer, loss], feed_dict={X:X_batch, Y:Y_batch, keep_prob: 0.5})
 
 			total_loss += loss_batch
 		print( 'Average loss epoch {0}: {1}'.format(i, total_loss/n_batches))
@@ -158,10 +175,10 @@ with tf.Session() as sess:
 	n_batches = int(test_dataset.shape[0]/batch_size)
 	total_correct_preds = 0
 	for i in range(n_batches):
-		X_batch = test_dataset[i*batch_size:(i+1)*batch_size,]
-		Y_batch = test_labels[i*batch_size:(i+1)*batch_size,]
+		X_batch = valid_dataset[i*batch_size:(i+1)*batch_size,]
+		Y_batch = valid_labels[i*batch_size:(i+1)*batch_size,]
 		#print(i)
-		_, loss_batch, logits_batch = sess.run([optimizer, loss, logits], feed_dict={X: X_batch, Y:Y_batch}) 
+		_, loss_batch, logits_batch = sess.run([optimizer, loss, logitsValid], feed_dict={X: X_batch, Y:Y_batch}) 
 		preds = tf.nn.softmax(logits_batch)
 		correct_preds = tf.equal(tf.argmax(preds, 1), tf.argmax(Y_batch, 1))
 		accuracy = tf.reduce_sum(tf.cast(correct_preds, tf.float32)) # need numpy.count_nonzero(boolarr) :(
