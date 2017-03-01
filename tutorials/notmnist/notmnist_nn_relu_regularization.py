@@ -120,15 +120,6 @@ def one_hidden_layer_nn(X, weights, biases, keep_prob):
 
 logits = one_hidden_layer_nn(X, weights, biases, keep_prob)
 
-# Model that takes trained weights and biases for validation and test prediction
-def one_hidden_layer_no_dropout_nn(X, weights, biases):
-	# Hidden layer with RELU activation
-	h_layer = tf.matmul(X, weights['w1']) + biases['b1']
-	h_layer = tf.nn.relu(h_layer)
-	o_layer = tf.matmul(h_layer, weights['w2']) + biases['b2']
-	return o_layer
-
-logitsValid = one_hidden_layer_no_dropout_nn(X, weights, biases)
 
 
 # Step 5: define loss function
@@ -146,6 +137,12 @@ loss = (loss +
 # Step 6: define training op
 # using gradient descent to minimize loss
 optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(loss)
+
+## Valid and test prediction
+#valid_prediction = tf.nn.softmax(
+#tf.matmul(tf_valid_dataset, weights) + biases)
+#test_prediction = tf.nn.softmax(tf.matmul(tf_test_dataset, weights) + biases)
+
 
 with tf.Session() as sess:
 	# to visualize using TensorBoard
@@ -170,6 +167,21 @@ with tf.Session() as sess:
 	print( 'Total time: {0} seconds'.format(time.time() - start_time))
 
 	print('Optimization Finished!') # should be around 0.35 after 25 epochs
+	print('Parameters: ', sess.run(weights), sess.run(biases))
+
+
+	trained_weights = sess.run(weights)
+	trained_biases = sess.run(biases)
+
+	# Model that takes trained weights and biases for validation and test prediction
+	def one_hidden_layer_no_dropout_nn(X, weights, biases):
+		# Hidden layer with RELU activation
+		h_layer = tf.matmul(X, weights['w1']) + biases['b1']
+		h_layer = tf.nn.relu(h_layer)
+		o_layer = tf.matmul(h_layer, weights['w2']) + biases['b2']
+		return o_layer
+
+	logitsValid = one_hidden_layer_no_dropout_nn(X, trained_weights, trained_biases)
 
 	# test the model
 	n_batches = int(test_dataset.shape[0]/batch_size)
@@ -178,7 +190,7 @@ with tf.Session() as sess:
 		X_batch = valid_dataset[i*batch_size:(i+1)*batch_size,]
 		Y_batch = valid_labels[i*batch_size:(i+1)*batch_size,]
 		#print(i)
-		_, loss_batch, logits_batch = sess.run([optimizer, loss, logitsValid], feed_dict={X: X_batch, Y:Y_batch}) 
+		logits_batch = sess.run(logitsValid, feed_dict={X: X_batch, Y:Y_batch}) 
 		preds = tf.nn.softmax(logits_batch)
 		correct_preds = tf.equal(tf.argmax(preds, 1), tf.argmax(Y_batch, 1))
 		accuracy = tf.reduce_sum(tf.cast(correct_preds, tf.float32)) # need numpy.count_nonzero(boolarr) :(
