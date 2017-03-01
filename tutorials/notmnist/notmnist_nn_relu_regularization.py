@@ -170,6 +170,7 @@ with tf.Session() as sess:
 	print('Parameters: ', sess.run(weights), sess.run(biases))
 
 
+	# Get trained parameters
 	trained_weights = sess.run(weights)
 	trained_biases = sess.run(biases)
 
@@ -183,31 +184,41 @@ with tf.Session() as sess:
 
 	logitsValid = one_hidden_layer_no_dropout_nn(X, trained_weights, trained_biases)
 
-	# test the model
+	# Prediction for Validation data
 	n_batches = int(test_dataset.shape[0]/batch_size)
 	total_correct_preds = 0
+	total_correct_preds_ = 0
 	for i in range(n_batches):
-		X_batch = valid_dataset[i*batch_size:(i+1)*batch_size,]
-		Y_batch = valid_labels[i*batch_size:(i+1)*batch_size,]
+		X_batch_valid = valid_dataset[i*batch_size:(i+1)*batch_size,]
+		Y_batch_valid = valid_labels[i*batch_size:(i+1)*batch_size,]
 		#print(i)
-		logits_batch = sess.run(logitsValid, feed_dict={X: X_batch, Y:Y_batch}) 
+		logits_batch = sess.run(logitsValid, feed_dict={X:X_batch_valid, Y:Y_batch_valid}) 
 		preds = tf.nn.softmax(logits_batch)
-		correct_preds = tf.equal(tf.argmax(preds, 1), tf.argmax(Y_batch, 1))
+		correct_preds = tf.equal(tf.argmax(preds, 1), tf.argmax(Y_batch_valid, 1))
 		accuracy = tf.reduce_sum(tf.cast(correct_preds, tf.float32)) # need numpy.count_nonzero(boolarr) :(
-		total_correct_preds += sess.run(accuracy)	
-	
-	print( 'Accuracy {0}'.format(total_correct_preds/test_dataset.shape[0]))
+		total_correct_preds += sess.run(accuracy)
 
-	# Visualization of the predicctions
+	print( 'Validation accuracy {0}'.format(total_correct_preds/valid_dataset.shape[0]))
+	
+	# Prediction for test data
+	logits_batch_ = sess.run(one_hidden_layer_no_dropout_nn(test_dataset, trained_weights,trained_biases)) 
+	preds_ = tf.nn.softmax(logits_batch_)
+	correct_preds_ = tf.equal(tf.argmax(preds_, 1), tf.argmax(test_labels, 1))
+	accuracy_ = tf.reduce_sum(tf.cast(correct_preds_, tf.float32)) # need numpy.count_nonzero(boolarr) :(
+	total_correct_preds_ += sess.run(accuracy_)	
+
+	print( 'Test accuracy {0}'.format(total_correct_preds_/test_dataset.shape[0]))
+
+	# Visualization of the predicctions on test data
 	for _ in range(10):
-		ran_image = ran.randint(0, X_batch.shape[0])
-		print('Random test label {0}'.format(Y_batch[ran_image]))
+		ran_image = ran.randint(0, test_dataset.shape[0])
+		print('Random test label {0}'.format(test_labels[ran_image]))
 		
-		pred_label = tf.argmax(preds, 1)
+		pred_label = tf.argmax(preds_, 1)
 		print('Predicted value = %d' % sess.run(pred_label[ran_image]))
 
-		label = Y_batch[ran_image].argmax(axis=0)
-		image = X_batch[ran_image].reshape([28,28])
+		label = test_labels[ran_image].argmax(axis=0)
+		image = test_dataset[ran_image].reshape([28,28])
 		plt.title('Example test: %d Label: %d' % (ran_image, label))
 		plt.imshow(image, cmap=plt.get_cmap('gray_r'))
 		plt.show()
