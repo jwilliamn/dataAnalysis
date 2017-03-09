@@ -14,16 +14,21 @@ Own implementation
 import tensorflow as tf
 import numpy as np
 import time
+import os
 
 import matplotlib.pyplot as plt
 import random as ran
 import pickle
 
+
+# Path to save trained parameters
+data_root = '/home/williamn/Repository/data/notmnist'
+
 # Define paramaters for the model
 learning_rate = 0.05 # 0.01
 batch_size = 16  # 100
 patch_size = 5
-n_epochs = 15
+n_epochs = 2 # 15
 
 # Network Parameters
 depth = 16
@@ -114,13 +119,22 @@ biases = {
 # this logits will be later passed through softmax layer
 # to get the probability distribution of possible label of the image
 def convnet_model(X):
-	conv = tf.nn.conv2d(X, weights['w1'], [1, 2, 2, 1], padding='SAME')
+	# 1st Convolution layer
+	conv = tf.nn.conv2d(X, weights['w1'], [1, 1, 1, 1], padding='SAME')
 	hidden = tf.nn.relu(conv + biases['b1'])
-	conv = tf.nn.conv2d(hidden, weights['w2'], [1, 2, 2, 1], padding='SAME')
+	hidden = tf.nn.max_pool(hidden, ksize=[1, 2, 2, 1], strides=[1,2,2,1], padding='SAME')
+
+	# 2nd Convolution layer
+	conv = tf.nn.conv2d(hidden, weights['w2'], [1, 1, 1, 1], padding='SAME')
 	hidden = tf.nn.relu(conv + biases['b2'])
+	hidden = tf.nn.max_pool(hidden, ksize=[1, 2, 2, 1], strides=[1,2,2,1], padding='SAME')
+
+	# Fully connected layer
 	shape = hidden.get_shape().as_list()
 	reshape = tf.reshape(hidden, [shape[0], shape[1]*shape[2]*shape[3]])
 	hidden = tf.nn.relu(tf.matmul(reshape, weights['w3']) + biases['b3'])
+
+	# Output
 	o_layer = tf.matmul(hidden, weights['w4']) + biases['b4']
 	return o_layer
 
@@ -153,7 +167,7 @@ test_pred = tf.nn.softmax(convnet_model(X_test))
 
 with tf.Session() as sess:
 	# to visualize using TensorBoard
-	writer = tf.summary.FileWriter('./graphs/convnet', sess.graph)
+	#writer = tf.summary.FileWriter('./graphs/convnet', sess.graph)
 
 	start_time = time.time()
 	sess.run(tf.global_variables_initializer())	
@@ -181,8 +195,10 @@ with tf.Session() as sess:
 	print('Total time: {0} seconds'.format(time.time() - start_time))
 
 	print('Optimization Finished!') # should be around 0.35 after 25 epochs
-	print('Parameters: ', sess.run(weights), sess.run(biases))
+	#print('Parameters: ', sess.run(weights), sess.run(biases))
 
+	trained_weights = sess.run(weights)
+	trained_biases = sess.run(biases)
 
 	# Visualization of the predicctions on test data
 	for _ in range(10):
@@ -199,4 +215,24 @@ with tf.Session() as sess:
 		plt.imshow(image, cmap=plt.get_cmap('gray_r'))
 		plt.show()
 
-	writer.close()
+
+	# Saving trained parameters the data for later reuse
+	pickle_file = os.path.join(data_root, 'notMNIST_param.pickle')
+
+	try:
+		f = open(pickle_file, 'wb')
+		save = {
+			'weights': trained_weights,
+			'biases': trained_biases,
+		}
+		pickle.dump(save, f, pickle.HIGHEST_PROTOCOL)
+		f.close()
+	except Exception as e:
+		print('Unable to save data to', pickle_file, ':', e)
+		raise
+
+	statinfo = os.stat(pickle_file)
+	print('Compressed pickle size:', statinfo.st_size)
+
+
+	#writer.close()
