@@ -104,7 +104,10 @@ if __name__ == '__main__':
     upis = ["UPIS"]
     asen = ["AAHH", "AA HH", "A H", "A.A.H.H.", "ASENT H", "AH", "ASENTAMIENTO HUMANO", 
             "A  H", "AA  HH", "ASENT. H.", "ASENT.H.", "ASENT.HUMANO", 
-            "ASENT. HUMANO", "AH.", "AA.HH"]
+            "ASENT. HUMANO", "AH.", "AA.HH","A.H", "A.H.", "ASEN H", "AA    HH", "AA   HH",
+            "AA JJ", "AA ", "aa hh", "aahh", "ah", "AJ ", "ASEN HUMAN", "ASENTA ", "ASENT ",
+            "ASENTE H", "ASENTH", "ASET H", "APV ", "ASNT H", "ASEN HUMA", "ASEN T H", 
+            "ASN ", "ASENTE H"]
     pueJ = ["PPJJ", "PJ", "PJ.", "PP JJ", "PUEBLO JOVEN", "P.JOVEN", "P. JOVEN"]
     urba = ["URB.", "URBAN", "UR.", "URB", "URBANIZACION", "ENACE", "URBANIZ"]
     pueb = ["PUEBLO"]
@@ -289,6 +292,9 @@ if __name__ == '__main__':
                     varInt = indAddr[addrStructure[keyOrd[i]]:addrStructure[keyOrd[i+1]]]
                 print(varInt)
             if keyOrd[i] in {"MANZANA"} and i < len(addrStructure):
+                if i == 0:
+                    varNuc = indAddr[0:addrStructure[keyOrd[i]]]
+
                 if i == (len(addrStructure) -1):
                     varMan = indAddr[addrStructure[keyOrd[i]]:]
                 else:
@@ -313,6 +319,9 @@ if __name__ == '__main__':
         data.loc[j,"MANZANA"] = varMan
         data.loc[j,"LOTE"] = varLot
         data.loc[j,"KILOMETRO"] = varKmt
+
+    
+    # Get rid of 
 
     # Write output to file
     #data.to_csv("dataSep.csv", index=False)
