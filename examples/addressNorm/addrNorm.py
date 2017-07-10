@@ -120,14 +120,14 @@ if __name__ == '__main__':
     # Nucleo Urbano
     #city = ["CIUDAD"]
     upis = ["UPIS"]
-    asen = ["AAHH", "AA HH", "A H", "A.A.H.H.", "ASENT H", "AH", "ASENTAMIENTO HUMANO", 
-            "A  H", "AA  HH", "ASENT. H.", "ASENT.H.", "ASENT.HUMANO", 
+    asen = ["AAHH", "AA HH", "A.A.H.H.", "ASENT H", "AH", "ASENTAMIENTO HUMANO", 
+            "AA  HH", "ASENT. H.", "ASENT.H.", "ASENT.HUMANO", 
             "ASENT. HUMANO", "AH.", "AA.HH","A.H", "A.H.", "ASEN H", "AA    HH", "AA   HH",
             "AA JJ", "AA ", "aa hh", "aahh", "ah", "AJ ", "ASEN HUMAN", "ASENTA ", "ASENT ",
             "ASENTE H", "ASENTH", "ASET H", "APV ", "ASNT H", "ASEN HUMA", "ASEN T H", 
-            "ASN ", "ASENTE H", "a h "]
+            "ASN ", "ASENTE H", "a h ", "A  H", "A H"]
     pueJ = ["PPJJ", "PJ", "PJ.", "PP JJ", "PUEBLO JOVEN", "P.JOVEN", "P. JOVEN"]
-    urba = ["URB.", "URBAN", "UR.", "URB", "URBANIZACION", "ENACE", "URBANIZ"]
+    urba = ["URB.", "URBAN", "UR.", "URB", "URBANIZACION", "URBANIZ"] # ENACE
     pueb = ["PUEBLO"]
     case = ["CASERIO"]
     anex = ["ANEXO"]
@@ -158,7 +158,7 @@ if __name__ == '__main__':
     piso = ["PISO"]
 
     # INTERIOR   
-    inte = ["INT.", "INTE", "INT", "DPT.", "DPTO.", "DEPA", "DPT", "DPTO"]
+    inte = ["INTERIOR", "INT.", "INTE", "INT", "DPT.", "DPTO.", "DEPA", "DPT", "DPTO"]
 
     # MANZANA 
     mzna = ["MZA", "MZ.", "MZ", "MAZ", "MANZANA", "MANZ"]
@@ -329,6 +329,17 @@ if __name__ == '__main__':
                     varLot = indAddr[addrStructure[keyOrd[i]]:]
                 else:
                     varLot = indAddr[addrStructure[keyOrd[i]]:addrStructure[keyOrd[i+1]]]
+
+                # Check Lote
+                if varLot != "":
+                    posnumV_, singleNum_, lenNum_ = searchNum(varLot)
+                    if posnumV_ != -1 and len(varLot[(posnumV_ + lenNum_):]) > 0:
+                        if varNuc == "":
+                            varNuc = varLot[(posnumV_ + lenNum_):]
+                        else:
+                            varNuc = varNuc + " " + varLot[(posnumV_ + lenNum_):]
+                        varLot = varLot[0:(posnumV_ + lenNum_)]                        
+
                 print(varLot)
 
             else:
@@ -336,13 +347,13 @@ if __name__ == '__main__':
 
         if not addrStructure:
             print("Abandonned address: ", indAddr)
-            posnumV, emptyNum, lenNum = searchNum(indAddr)
-            if posnumV == -1 and not emptyNum :
+            posnumV, singleNum, lenNum = searchNum(indAddr)
+            if posnumV == -1 and not singleNum :
                 varTnu = "BE CAREFUL"
                 varNuc = indAddr
             else:
                 varVia = indAddr[0:posnumV]
-                varNum = emptyNum
+                varNum = singleNum
                 varNuc = indAddr[(posnumV + lenNum):]
 
 
@@ -374,8 +385,6 @@ if __name__ == '__main__':
         data.loc[j,"INTERIOR"] = cleanPref(inte, varInt)
         data.loc[j,"MANZANA"] = cleanPref(mzna, varMan)
         data.loc[j,"LOTE"] = cleanPref(lote, varLot)
-
-
 
 
     # Write output to file
