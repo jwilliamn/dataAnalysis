@@ -43,7 +43,20 @@ def searchDic(dictionary):
 def searchNum(weirdAddr):
     num = [s for s in weirdAddr.split() if s.isdigit()]
     numpos = searchAdd(num, weirdAddr)
-    return numpos, num[0], len(num[0])
+    if len(num) > 0:
+        return numpos, num[0], len(num[0])
+    else:
+        return numpos, None, None
+
+def cleanPref(pattern, dirtyAddr):
+    cleanAddr = dirtyAddr
+    for p in range(0, len(pattern)):
+        if dirtyAddr.find(pattern[p]) != -1:
+            cleanAddr = dirtyAddr.replace(pattern[p], "")
+            #print("clean: ", cleanAddr)
+            break
+
+    return cleanAddr
 
 
 # Main function ####
@@ -319,14 +332,18 @@ if __name__ == '__main__':
                 print(varLot)
 
             else:
-                posnumV, emptyNum, lenNum = searchNum(indAddr)
-                if posnumV == -1:
-                    varTnu = "BE CAREFUL"
-                    varNuc = indAddr
-                else:
-                    varVia = indAddr[0:posnumV]
-                    varNum = emptyNum
-                    varNuc = indAddr[(posnumV + lenNum):]
+                continue
+
+        if not addrStructure:
+            print("Abandonned address: ", indAddr)
+            posnumV, emptyNum, lenNum = searchNum(indAddr)
+            if posnumV == -1 and not emptyNum :
+                varTnu = "BE CAREFUL"
+                varNuc = indAddr
+            else:
+                varVia = indAddr[0:posnumV]
+                varNum = emptyNum
+                varNuc = indAddr[(posnumV + lenNum):]
 
 
 
@@ -343,7 +360,23 @@ if __name__ == '__main__':
         data.loc[j,"KILOMETRO"] = varKmt
 
     
-    # Get rid of 
+        # Get rid of non normalized address prefixes
+        nucPref = (upis + asen + pueJ + urba + pueb + case + anex + coop + camp + conj + 
+            asoc + cooV + barr + ccpp)
+
+        viaPref = call + aven + jron + carr + psje
+       
+        data.loc[j,"NUCLEO_URBANO"] = cleanPref(nucPref, varNuc)
+        data.loc[j,"NOMBRE_VIA"] = cleanPref(viaPref, varVia)
+        data.loc[j,"NUMERO_PUERTA"] = cleanPref(num, varNum)
+        data.loc[j,"BLOCK"] = cleanPref(blck, varBlo)
+        data.loc[j,"PISO"] = cleanPref(piso, varPis)
+        data.loc[j,"INTERIOR"] = cleanPref(inte, varInt)
+        data.loc[j,"MANZANA"] = cleanPref(mzna, varMan)
+        data.loc[j,"LOTE"] = cleanPref(lote, varLot)
+
+
+
 
     # Write output to file
     #data.to_csv("dataSep.csv", index=False)
