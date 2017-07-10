@@ -40,6 +40,11 @@ def searchDic(dictionary):
     #print("Label  %s \tPosi %d" % (tipLabel, posValue))
     return tipLabel, posValue
 
+def searchNum(weirdAddr):
+    num = [s for s in weirdAddr.split() if s.isdigit()]
+    numpos = searchAdd(num, weirdAddr)
+    return numpos, num[0], len(num[0])
+
 
 # Main function ####
 if __name__ == '__main__':
@@ -107,7 +112,7 @@ if __name__ == '__main__':
             "ASENT. HUMANO", "AH.", "AA.HH","A.H", "A.H.", "ASEN H", "AA    HH", "AA   HH",
             "AA JJ", "AA ", "aa hh", "aahh", "ah", "AJ ", "ASEN HUMAN", "ASENTA ", "ASENT ",
             "ASENTE H", "ASENTH", "ASET H", "APV ", "ASNT H", "ASEN HUMA", "ASEN T H", 
-            "ASN ", "ASENTE H"]
+            "ASN ", "ASENTE H", "a h "]
     pueJ = ["PPJJ", "PJ", "PJ.", "PP JJ", "PUEBLO JOVEN", "P.JOVEN", "P. JOVEN"]
     urba = ["URB.", "URBAN", "UR.", "URB", "URBANIZACION", "ENACE", "URBANIZ"]
     pueb = ["PUEBLO"]
@@ -115,7 +120,7 @@ if __name__ == '__main__':
     anex = ["ANEXO"]
     coop = ["COOPERATIVA AGRARIA"]
     camp = ["CAMPAMENTO MINERO"]
-    conj = ["CONJUNTO HABITACIONAL", "CONJ.HAB.", "CONJ HAB"]
+    conj = ["CONJUNTO HABITACIONAL", "CONJ.HAB.", "CONJ HAB", "C HAB "]
     asoc = ["ASOCIACION", "ASOCIACIÓN", "ASOC"]
     cooV = ["COOPERATIVA DE VIVIENDA"]
     barr = ["BARRIO"]
@@ -131,10 +136,10 @@ if __name__ == '__main__':
 
     # NOMBRE DE VIA  
     # Número de puerta
-    num = ["N°", " N ", "NRO", "NUMERO"]
+    num = ["NUMERO", "N°", "NRO", " N ", "SN "]
 
     # BLOCK 
-    blck = ["BLOCK", "BL"] 
+    blck = ["BLOCK", "BLOQ ", "BLOK", " BL ", "BQ "] 
 
     # PISO  
     piso = ["PISO"]
@@ -259,7 +264,7 @@ if __name__ == '__main__':
                     varNuc = indAddr[addrStructure[keyOrd[i]]:addrStructure[keyOrd[i+1]]]
                 print(varNuc)
 
-            if keyOrd[i] in listVia and i < len(addrStructure):
+            elif keyOrd[i] in listVia and i < len(addrStructure):
                 varTvi = keyOrd[i]
                 if i == (len(addrStructure) -1):
                     varVia = indAddr[addrStructure[keyOrd[i]]:]
@@ -267,31 +272,37 @@ if __name__ == '__main__':
                     varVia = indAddr[addrStructure[keyOrd[i]]:addrStructure[keyOrd[i+1]]]
                 print(varVia)
 
-            if keyOrd[i] in {"NUMERO"} and i < len(addrStructure):
+            elif keyOrd[i] in {"NUMERO"} and i < len(addrStructure):
+                if i == 0:
+                    varVia = indAddr[0:addrStructure[keyOrd[i]]]
+
                 if i == (len(addrStructure) -1):
                     varNum = indAddr[addrStructure[keyOrd[i]]:]
                 else:
                     varNum = indAddr[addrStructure[keyOrd[i]]:addrStructure[keyOrd[i+1]]]
                 print(varNum)
-            if keyOrd[i] in {"BLOCK"} and i < len(addrStructure):
+            elif keyOrd[i] in {"BLOCK"} and i < len(addrStructure):
                 if i == (len(addrStructure) -1):
                     varBlo = indAddr[addrStructure[keyOrd[i]]:]
                 else:
                     varBlo = indAddr[addrStructure[keyOrd[i]]:addrStructure[keyOrd[i+1]]]
                 print(varBlo)
-            if keyOrd[i] in {"PISO"} and i < len(addrStructure):
+            elif keyOrd[i] in {"PISO"} and i < len(addrStructure):
                 if i == (len(addrStructure) -1):
                     varPis = indAddr[addrStructure[keyOrd[i]]:]
                 else:
                     varPis = indAddr[addrStructure[keyOrd[i]]:addrStructure[keyOrd[i+1]]]
                 print(varPis)
-            if keyOrd[i] in {"INTERIOR"} and i < len(addrStructure):
+            elif keyOrd[i] in {"INTERIOR"} and i < len(addrStructure):
+                if i == 0:
+                    varVia = indAddr[0:addrStructure[keyOrd[i]]]
+
                 if i == (len(addrStructure) -1):
                     varInt = indAddr[addrStructure[keyOrd[i]]:]
                 else:
                     varInt = indAddr[addrStructure[keyOrd[i]]:addrStructure[keyOrd[i+1]]]
                 print(varInt)
-            if keyOrd[i] in {"MANZANA"} and i < len(addrStructure):
+            elif keyOrd[i] in {"MANZANA"} and i < len(addrStructure):
                 if i == 0:
                     varNuc = indAddr[0:addrStructure[keyOrd[i]]]
 
@@ -300,12 +311,23 @@ if __name__ == '__main__':
                 else:
                     varMan = indAddr[addrStructure[keyOrd[i]]:addrStructure[keyOrd[i+1]]]
                 print(varMan)
-            if keyOrd[i] in {"LOTE"} and i < len(addrStructure):
+            elif keyOrd[i] in {"LOTE"} and i < len(addrStructure):
                 if i == (len(addrStructure) -1):
                     varLot = indAddr[addrStructure[keyOrd[i]]:]
                 else:
                     varLot = indAddr[addrStructure[keyOrd[i]]:addrStructure[keyOrd[i+1]]]
                 print(varLot)
+
+            else:
+                posnumV, emptyNum, lenNum = searchNum(indAddr)
+                if posnumV == -1:
+                    varTnu = "BE CAREFUL"
+                    varNuc = indAddr
+                else:
+                    varVia = indAddr[0:posnumV]
+                    varNum = emptyNum
+                    varNuc = indAddr[(posnumV + lenNum):]
+
 
 
         data.loc[j,"TIPO_NUCLEO _URBANO"] = varTnu
