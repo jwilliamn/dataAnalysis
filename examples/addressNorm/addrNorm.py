@@ -126,8 +126,8 @@ if __name__ == '__main__':
             "AA JJ", "AA ", "aa hh", "aahh", "ah", "AJ ", "ASEN HUMAN", "ASENTA ", "ASENT ",
             "ASENTE H", "ASENTH", "ASET H", "APV ", "ASNT H", "ASEN HUMA", "ASEN T H", 
             "ASN ", "ASENTE H", "a h ", "A  H", "A H"]
-    pueJ = ["PPJJ", "PJ", "PJ.", "PP JJ", "PUEBLO JOVEN", "P.JOVEN", "P. JOVEN"]
-    urba = ["URB.", "URBAN", "UR.", "URB", "URBANIZACION", "URBANIZ"] # ENACE
+    pueJ = ["PPJJ", "PJ.", "PJ", "PP JJ", "PUEBLO JOVEN", "P.JOVEN", "P. JOVEN", " P J "]
+    urba = ["URBANIZACION", "URBANIZ", "URB.", "URBAN", "URB", "UR."] # ENACE
     pueb = ["PUEBLO"]
     case = ["CASERIO"]
     anex = ["ANEXO"]
