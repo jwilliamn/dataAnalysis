@@ -120,22 +120,26 @@ if __name__ == '__main__':
     # Nucleo Urbano
     #city = ["CIUDAD"]
     upis = ["UPIS"]
-    asen = ["AAHH", "AA HH", "A.A.H.H.", "ASENT H", "AH", "ASENTAMIENTO HUMANO", 
+    asen = ["AAHH", "AAA HH", "AA HH", "A.A.H.H.", "ASENT H", "ASENTAMIENTO HUMANO", 
             "AA  HH", "ASENT. H.", "ASENT.H.", "ASENT.HUMANO", 
             "ASENT. HUMANO", "AH.", "AA.HH","A.H", "A.H.", "ASEN H", "AA    HH", "AA   HH",
             "AA JJ", "AA ", "aa hh", "aahh", "ah", "AJ ", "ASEN HUMAN", "ASENTA ", "ASENT ",
-            "ASENTE H", "ASENTH", "ASET H", "APV ", "ASNT H", "ASEN HUMA", "ASEN T H", 
-            "ASN ", "ASENTE H", "a h ", "A  H", "A H"]
+            "ASENTE H", "ASENTH", "ASET H", "APV ", "ASNT H", "ASEN HUMA", "ASEN T H", "AH ", 
+            "A.H.M", "A,H.R", "A.H.R.", "AAH ", "AAHH URB", 
+            "ASN ", "ASENTE H", "a h ", "A  H", "A H", ]
+    sect = ["SECTOR", "SECTO", "SECT.", "SCTR", "SECT", "SEC "]
+
     pueJ = ["PPJJ", "PJ.", "PJ", "PP JJ", "PUEBLO JOVEN", "P.JOVEN", "P. JOVEN", " P J "]
-    urba = ["URBANIZACION", "URBANIZ", "URB.", "URBAN", "URB", "UR."] # ENACE
+    urba = ["URBANIZACIÓN", "URBANIZACION", "URBANIZ", "URB.", "URBAN", "URB", "UR."] # ENACE
     pueb = ["PUEBLO"]
     case = ["CASERIO"]
     anex = ["ANEXO"]
     coop = ["COOPERATIVA AGRARIA"]
     camp = ["CAMPAMENTO MINERO"]
     conj = ["CONJUNTO HABITACIONAL", "CONJ.HAB.", "CONJ HAB", "C HAB "]
-    asoc = ["ASOCIACION", "ASOCIACIÓN", "ASOC"]
-    cooV = ["COOPERATIVA DE VIVIENDA"]
+    asoc = ["ASOCIACION DE VIVIENDA", "ASOCIACION", "ASOCIACIÓN", "ASOC. DE VIV", "ASOC VIV", 
+            "ASOC.", "ASOC ", ]
+    cooV = ["COOPERATIVA DE VIVIENDA", "COOPERATIVA", "COOP.VIV.", "COOP.VIV", "COOP.", "COOP"]
     barr = ["BARRIO"]
     ccpp = ["CENTRO POBLADO", "CC.PP"]
 
@@ -176,6 +180,7 @@ if __name__ == '__main__':
         print(OKBLUE + "Address: " + NC, j, indAddr)
 
         upispos = searchAdd(upis, indAddr)
+        sectpos = searchAdd(sect, indAddr)
         asenpos = searchAdd(asen, indAddr)
         pueJpos = searchAdd(pueJ, indAddr)
         urbapos = searchAdd(urba, indAddr)
@@ -211,7 +216,8 @@ if __name__ == '__main__':
 
 
         # Dictionary of Identifiers
-        nuclUrb = {"UPIS":upispos, "ASENTAMIENTO HUMANO":asenpos, "PUEBLO JOVEN":pueJpos, 
+        nuclUrb = {"UPIS":upispos, "ASENTAMIENTO HUMANO":asenpos, "SECTOR":sectpos, 
+        "PUEBLO JOVEN":pueJpos, 
         "URBANIZACION":urbapos, "PUEBLO":puebpos, "CASERIO":casepos, "ANEXO":anexpos, 
         "COOPERATIVA AGRARIA":cooppos, "CAMPAMENTO MINERO":camppos, "CONJUNTO HABITACIONAL":conjpos, 
         "ASOCIACION DE VIVIENDA":asocpos, "COOPERATIVA DE VIVIENDA":cooVpos, "BARRIO":barrpos, 
@@ -251,7 +257,8 @@ if __name__ == '__main__':
         keyOrd = sorted(addrStructure, key=addrStructure.get)
 
         # Split address according to structure
-        listNuc = {"UPIS", "ASENTAMIENTO HUMANO", "PUEBLO JOVEN", "URBANIZACION", "PUEBLO", "CASERIO",
+        listNuc = {"UPIS", "ASENTAMIENTO HUMANO", "SECTOR", "PUEBLO JOVEN", "URBANIZACION", "PUEBLO", 
+        "CASERIO",
         "ANEXO", "COOPERATIVA AGRARIA", "CAMPAMENTO MINERO", "CONJUNTO HABITACIONAL", 
         "ASOCIACION DE VIVIENDA", "COOPERATIVA DE VIVIENDA", "BARRIO", "CENTRO POBLADO"}
         listVia = {"CALLE", "AVENIDA", "JIRON", "CARRETERA", "PASAJE"}
