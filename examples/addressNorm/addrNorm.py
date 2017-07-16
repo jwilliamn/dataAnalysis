@@ -125,7 +125,7 @@ if __name__ == '__main__':
             "ASENT. HUMANO", "AH.", "AA.HH","A.H", "A.H.", "ASEN H", "AA    HH", "AA   HH",
             "AA JJ", "AA ", "aa hh", "aahh", "ah", "AJ ", "ASEN HUMAN", "ASENTA ", "ASENT ",
             "ASENTE H", "ASENTH", "ASET H", "APV ", "ASNT H", "ASEN HUMA", "ASEN T H", "AH ", 
-            "A.H.M", "A,H.R", "A.H.R.", "AAH ", "AAHH URB", 
+            "A.H.M", "A,H.R", "A.H.R.", "AAH ", "AAHH URB", "AHM ",  
             "ASN ", "ASENTE H", "a h ", "A  H", "A H", ]
     sect = ["SECTOR", "SECTO", "SECT.", "SCTR", "SECT", "SEC "]
 
@@ -142,6 +142,7 @@ if __name__ == '__main__':
     cooV = ["COOPERATIVA DE VIVIENDA", "COOPERATIVA", "COOP.VIV.", "COOP.VIV", "COOP.", "COOP"]
     barr = ["BARRIO"]
     ccpp = ["CENTRO POBLADO", "CC.PP"]
+    ampl = ["AMPLIACION", "AMP.", "AMP "]
 
 
     # TIPO DE VIA 
@@ -194,6 +195,7 @@ if __name__ == '__main__':
         cooVpos = searchAdd(cooV, indAddr)
         barrpos = searchAdd(barr, indAddr)
         ccpppos = searchAdd(ccpp, indAddr)
+        amplpos = searchAdd(ampl, indAddr)
 
 
         callpos = searchAdd(call, indAddr)
@@ -221,7 +223,7 @@ if __name__ == '__main__':
         "URBANIZACION":urbapos, "PUEBLO":puebpos, "CASERIO":casepos, "ANEXO":anexpos, 
         "COOPERATIVA AGRARIA":cooppos, "CAMPAMENTO MINERO":camppos, "CONJUNTO HABITACIONAL":conjpos, 
         "ASOCIACION DE VIVIENDA":asocpos, "COOPERATIVA DE VIVIENDA":cooVpos, "BARRIO":barrpos, 
-        "CENTRO POBLADO":ccpppos}
+        "CENTRO POBLADO":ccpppos, "AMPLIACION":amplpos}
 
         tipoVia = {"CALLE":callpos, "AVENIDA":avenpos, "JIRON":jronpos, "CARRETERA":carrpos, 
         "PASAJE":psjepos}
@@ -260,7 +262,7 @@ if __name__ == '__main__':
         listNuc = {"UPIS", "ASENTAMIENTO HUMANO", "SECTOR", "PUEBLO JOVEN", "URBANIZACION", "PUEBLO", 
         "CASERIO",
         "ANEXO", "COOPERATIVA AGRARIA", "CAMPAMENTO MINERO", "CONJUNTO HABITACIONAL", 
-        "ASOCIACION DE VIVIENDA", "COOPERATIVA DE VIVIENDA", "BARRIO", "CENTRO POBLADO"}
+        "ASOCIACION DE VIVIENDA", "COOPERATIVA DE VIVIENDA", "BARRIO", "CENTRO POBLADO", "AMPLIACION"}
         listVia = {"CALLE", "AVENIDA", "JIRON", "CARRETERA", "PASAJE"}
 
         varTnu = ""
@@ -379,8 +381,8 @@ if __name__ == '__main__':
 
     
         # Get rid of non normalized address prefixes
-        nucPref = (upis + asen + pueJ + urba + pueb + case + anex + coop + camp + conj + 
-            asoc + cooV + barr + ccpp)
+        nucPref = (upis + asen + sect + pueJ + urba + pueb + case + anex + coop + camp + conj + 
+            asoc + cooV + barr + ccpp + ampl)
 
         viaPref = call + aven + jron + carr + psje
        
