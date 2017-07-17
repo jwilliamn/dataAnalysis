@@ -125,9 +125,9 @@ if __name__ == '__main__':
             "ASENT. HUMANO", "A.H.R.", "AH.", "AA.HH","A.H.", "A.H", "ASEN H", "AA    HH", "AA   HH",
             "AA JJ", "AA ", "aa hh", "aahh", "ah", "AJ ", "ASEN HUMAN", "ASENTA ", "ASENT ",
             "ASENTE H", "ASENTH", "ASET H", "APV ", "ASNT H", "ASEN HUMA", "ASEN T H", "AH ", 
-            "A.H.M", "A,H.R", "AAH ", "AAHH URB", "AHM ",  
-            "ASN ", "ASENTE H", "a h ", "A  H", "A H", ]
-    sect = ["SECTOR", "SECTO", "SECT.", "SCTR", "SECT", "SEC "]
+            "A.H.M", "A,H.R", "AAH ", "AAHH URB", "AHM. ", "AHM ",  "AA. HH. ", 
+            "ASN ", "ASENTE H", "a h ", "A  H", "A H"]
+    
 
     pueJ = ["PPJJ", "PJ.", "PJ", "PP JJ", "PUEBLO JOVEN", "P.JOVEN", "P. JOVEN", " P J "]
     urba = ["URBANIZACIÓN", "URBANIZACION", "URBANIZ", "URB.", "URBAN", "URB", "UR."] # ENACE
@@ -143,6 +143,8 @@ if __name__ == '__main__':
     barr = ["BARRIO"]
     ccpp = ["CENTRO POBLADO", "CC.PP"]
     ampl = ["AMPLIACION", "AMP.", "AMP "]
+    sect = ["SECTOR", "SECTO", "SECT.", "SCTR", "SECT", "SEC "]
+
 
 
     # TIPO DE VIA 
@@ -169,7 +171,7 @@ if __name__ == '__main__':
     mzna = ["MZA", "MZ.", "MZ", "MAZ", "MANZANA", "MANZ"]
 
     # LOTE 
-    lote = ["LT", "LT.", "LOTE", "LTE", "LOT"]
+    lote = ["LOTE", "LTE", "LOT ", "LT.", "LT "]
 
     # KILOMETRO
 
@@ -181,7 +183,7 @@ if __name__ == '__main__':
         print(OKBLUE + "Address: " + NC, j, indAddr)
 
         upispos = searchAdd(upis, indAddr)
-        sectpos = searchAdd(sect, indAddr)
+
         asenpos = searchAdd(asen, indAddr)
         pueJpos = searchAdd(pueJ, indAddr)
         urbapos = searchAdd(urba, indAddr)
@@ -195,7 +197,9 @@ if __name__ == '__main__':
         cooVpos = searchAdd(cooV, indAddr)
         barrpos = searchAdd(barr, indAddr)
         ccpppos = searchAdd(ccpp, indAddr)
+        
         amplpos = searchAdd(ampl, indAddr)
+        sectpos = searchAdd(sect, indAddr)
 
 
         callpos = searchAdd(call, indAddr)
@@ -218,12 +222,12 @@ if __name__ == '__main__':
 
 
         # Dictionary of Identifiers
-        nuclUrb = {"UPIS":upispos, "ASENTAMIENTO HUMANO":asenpos, "SECTOR":sectpos, 
+        nuclUrb = {"UPIS":upispos, "ASENTAMIENTO HUMANO":asenpos, 
         "PUEBLO JOVEN":pueJpos, 
         "URBANIZACION":urbapos, "PUEBLO":puebpos, "CASERIO":casepos, "ANEXO":anexpos, 
         "COOPERATIVA AGRARIA":cooppos, "CAMPAMENTO MINERO":camppos, "CONJUNTO HABITACIONAL":conjpos, 
         "ASOCIACION DE VIVIENDA":asocpos, "COOPERATIVA DE VIVIENDA":cooVpos, "BARRIO":barrpos, 
-        "CENTRO POBLADO":ccpppos, "AMPLIACION":amplpos}
+        "CENTRO POBLADO":ccpppos, "AMPLIACION":amplpos, "SECTOR":sectpos}
 
         tipoVia = {"CALLE":callpos, "AVENIDA":avenpos, "JIRON":jronpos, "CARRETERA":carrpos, 
         "PASAJE":psjepos}
@@ -259,10 +263,11 @@ if __name__ == '__main__':
         keyOrd = sorted(addrStructure, key=addrStructure.get)
 
         # Split address according to structure
-        listNuc = {"UPIS", "ASENTAMIENTO HUMANO", "SECTOR", "PUEBLO JOVEN", "URBANIZACION", "PUEBLO", 
+        listNuc = {"UPIS", "ASENTAMIENTO HUMANO", "PUEBLO JOVEN", "URBANIZACION", "PUEBLO", 
         "CASERIO",
         "ANEXO", "COOPERATIVA AGRARIA", "CAMPAMENTO MINERO", "CONJUNTO HABITACIONAL", 
-        "ASOCIACION DE VIVIENDA", "COOPERATIVA DE VIVIENDA", "BARRIO", "CENTRO POBLADO", "AMPLIACION"}
+        "ASOCIACION DE VIVIENDA", "COOPERATIVA DE VIVIENDA", "BARRIO", "CENTRO POBLADO", "AMPLIACION", 
+        "SECTOR"}
         listVia = {"CALLE", "AVENIDA", "JIRON", "CARRETERA", "PASAJE"}
 
         varTnu = ""
@@ -367,7 +372,7 @@ if __name__ == '__main__':
 
 
 
-        data.loc[j,"TIPO_NUCLEO _URBANO"] = varTnu
+        data.loc[j,"TIPO_NUCLEO_URBANO"] = varTnu
         data.loc[j,"NUCLEO_URBANO"] = varNuc
         data.loc[j,"TIPO_VIA"] = varTvi
         data.loc[j,"NOMBRE_VIA"] = varVia
@@ -381,8 +386,8 @@ if __name__ == '__main__':
 
     
         # Get rid of non normalized address prefixes
-        nucPref = (upis + asen + sect + pueJ + urba + pueb + case + anex + coop + camp + conj + 
-            asoc + cooV + barr + ccpp + ampl)
+        nucPref = (upis + asen + pueJ + urba + pueb + case + anex + coop + camp + conj + 
+            asoc + cooV + barr + ccpp + ampl + sect)
 
         viaPref = call + aven + jron + carr + psje
        
@@ -395,6 +400,14 @@ if __name__ == '__main__':
         data.loc[j,"MANZANA"] = cleanPref(mzna, varMan)
         data.loc[j,"LOTE"] = cleanPref(lote, varLot)
 
+
+
+    # Clean up things like 2, 2do, MEz, 12-3E, etc
+    for d in range(0, data.shape[0]):
+        data.loc[d, "NUCLEO_URBANO"] = data["NUCLEO_URBANO"][d].upper()
+        data.loc[d, "NUCLEO_URBANO"] = data["NUCLEO_URBANO"][d].strip()
+        if len(data["NUCLEO_URBANO"][d]) < 4:
+            data.loc[d, "NUCLEO_URBANO"] = ""
 
     # Write output to file
     #data.to_csv("dataSep.csv", index=False)
