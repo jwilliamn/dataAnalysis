@@ -122,10 +122,10 @@ if __name__ == '__main__':
     upis = ["UPIS"]
     asen = ["AAHH", "AAA HH", "AA HH", "A.A.H.H.", "ASENT H", "ASENTAMIENTO HUMANO", 
             "AA  HH", "ASENT. H.", "ASENT.H.", "ASENT.HUMANO", 
-            "ASENT. HUMANO", "AH.", "AA.HH","A.H", "A.H.", "ASEN H", "AA    HH", "AA   HH",
+            "ASENT. HUMANO", "A.H.R.", "AH.", "AA.HH","A.H.", "A.H", "ASEN H", "AA    HH", "AA   HH",
             "AA JJ", "AA ", "aa hh", "aahh", "ah", "AJ ", "ASEN HUMAN", "ASENTA ", "ASENT ",
             "ASENTE H", "ASENTH", "ASET H", "APV ", "ASNT H", "ASEN HUMA", "ASEN T H", "AH ", 
-            "A.H.M", "A,H.R", "A.H.R.", "AAH ", "AAHH URB", "AHM ",  
+            "A.H.M", "A,H.R", "AAH ", "AAHH URB", "AHM ",  
             "ASN ", "ASENTE H", "a h ", "A  H", "A H", ]
     sect = ["SECTOR", "SECTO", "SECT.", "SCTR", "SECT", "SEC "]
 
