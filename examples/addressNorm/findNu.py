@@ -48,10 +48,13 @@ if __name__ == '__main__':
     arg = sys.argv[1]
     argLook = sys.argv[2]
     argVal = sys.argv[3]
+    arglook2 = sys.argv[4]
+    argVal2 = sys.argv[5]
     
     # Read data
     data = pd.read_csv(arg)
     findData = pd.read_csv(argLook) #, encoding='cp1250')
+    findData2 = pd.read_csv(arglook2)
 
 
     
@@ -63,6 +66,9 @@ if __name__ == '__main__':
     #print(data.head(10))
     print("Original shape: ", data.shape)
     #print(data["DIRECCION"].describe())
+
+    print(findData2.head(10))
+    print(findData2.shape)
 
     #newData = data.iloc[:,[0,1,2,3,4,5,6,7,51,52,53,54,55,56,57,58,59,60,61]].copy()
     newData = data[["TIPO_DOCUMENTO","NUMERO_DOCUMENTO","APELLIDO_PATERNO","APELLIDO_MATERNO",
@@ -85,6 +91,10 @@ if __name__ == '__main__':
     newData.loc[newData["NUCLEO_URBANO"].isin(findData["NOMBRE N.U"]), "DISTRICT_"] = argVal
     newData.loc[newData["DISTRICT_"] == argVal, "MATCH_"] = "Perfect_match"
 
+    newData.loc[(newData["NUCLEO_URBANO"].isin(findData2["NOMBRE N.U"]) &
+                newData["MATCH_"].isin(["None"])), "DISTRICT_"] = argVal2
+    newData.loc[newData["DISTRICT_"] == argVal2, "MATCH_"] = "Perfect_match"
+
     # Filling missing target column
     newData["NUCLEO_URBANO"] = newData["NUCLEO_URBANO"].fillna("MissingNu")
     
@@ -97,21 +107,37 @@ if __name__ == '__main__':
             newData.loc[p, "NUCLEO_URBANO"] = newData["NUCLEO_URBANO"][p].translate(translator)
     """
 
+    
     # Included and partially matched
     for i in range(0, newData.shape[0]):
-        print("______Nu Urb: ", i)
-        for j in range(0, findData.shape[0]):
-            if (((newData["NUCLEO_URBANO"][i] in findData["NOMBRE N.U"][j]) or
-             (findData["NOMBRE N.U"][j] in newData["NUCLEO_URBANO"][i])) and 
-            newData["DISTRICT_"][i] == ""):
-                newData.loc[i,"DISTRICT_"] = argVal
-                newData.loc[i,"MATCH_"] = "Included"
-            if (newData["DISTRICT_"][i] == "" and 
-                similarity(newData["NUCLEO_URBANO"][i], findData["NOMBRE N.U"][j]) > 0.85):
-                newData.loc[i,"DISTRICT_"] = argVal
-                newData.loc[i,"MATCH_"] = "Partial_match"
-            
-        
+        print("______Nu Urb list 1: ", i)
+        if newData["MATCH_"][i] == "None":
+            for j in range(0, findData.shape[0]):
+                if (((newData["NUCLEO_URBANO"][i] in findData["NOMBRE N.U"][j]) or
+                 (findData["NOMBRE N.U"][j] in newData["NUCLEO_URBANO"][i])) and 
+                newData["DISTRICT_"][i] == ""):
+                    newData.loc[i,"DISTRICT_"] = argVal
+                    newData.loc[i,"MATCH_"] = "Included"
+                if (newData["DISTRICT_"][i] == "" and 
+                    similarity(newData["NUCLEO_URBANO"][i], findData["NOMBRE N.U"][j]) > 0.7):
+                    newData.loc[i,"DISTRICT_"] = argVal
+                    newData.loc[i,"MATCH_"] = "Partial_match"
+                
+
+    for m in range(0, newData.shape[0]):
+        print("______Nu Urb list 2: ", m)
+        if newData["MATCH_"][m] == "None":
+            for n in range(0, findData2.shape[0]):
+                if (((newData["NUCLEO_URBANO"][m] in findData2["NOMBRE N.U"][n]) or
+                 (findData2["NOMBRE N.U"][n] in newData["NUCLEO_URBANO"][m])) and 
+                newData["DISTRICT_"][m] == ""):
+                    newData.loc[m,"DISTRICT_"] = argVal2
+                    newData.loc[m,"MATCH_"] = "Included"
+                if (newData["DISTRICT_"][m] == "" and 
+                    similarity(newData["NUCLEO_URBANO"][m], findData2["NOMBRE N.U"][n]) > 0.7):
+                    newData.loc[m,"DISTRICT_"] = argVal2
+                    newData.loc[m,"MATCH_"] = "Partial_match"
+    
 
     # Write output to file
     newData.to_csv("dataVentFound.csv", index=False)

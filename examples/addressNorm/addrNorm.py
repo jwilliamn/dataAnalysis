@@ -404,6 +404,7 @@ if __name__ == '__main__':
 
     # Clean up things like 2, 2do, MEz, 12-3E, etc
     for d in range(0, data.shape[0]):
+        print("Cleaning....... ", d)
         data.loc[d, "NUCLEO_URBANO"] = data["NUCLEO_URBANO"][d].upper()
         data.loc[d, "NUCLEO_URBANO"] = data["NUCLEO_URBANO"][d].strip()
         if len(data["NUCLEO_URBANO"][d]) < 4:
