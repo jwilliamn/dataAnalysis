@@ -17,26 +17,9 @@
 # Libraries ##
 import numpy as np
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
 
-import plotly.offline as py
-py.init_notebook_mode(connected=True)
-import plotly.graph_objs as go
-import plotly.tools as tls
+from sklearn.preprocessing import LabelEncoder
 
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, log_loss
-from imblearn.over_sampling import SMOTE
-import xgboost
-
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
-
-import warnings
-warnings.filterwarnings('ignore')
-
-from subprocess import check_output
 
 
 # Reading data ##
