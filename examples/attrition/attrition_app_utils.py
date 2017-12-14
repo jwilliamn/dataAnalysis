@@ -152,7 +152,7 @@ def initialize_parameters_deep(layer_dims):
     L = len(layer_dims)            # number of layers in the network
 
     for l in range(1, L):
-        parameters['W' + str(l)] = np.random.randn(layer_dims[l], layer_dims[l-1]) / np.sqrt(layer_dims[l-1]) #*0.01
+        parameters['W' + str(l)] = np.random.randn(layer_dims[l], layer_dims[l-1])* np.sqrt(2) / np.sqrt(layer_dims[l-1]) #*0.01
         parameters['b' + str(l)] = np.zeros((layer_dims[l], 1))
         
         assert(parameters['W' + str(l)].shape == (layer_dims[l], layer_dims[l-1]))
@@ -213,7 +213,7 @@ def linear_activation_forward(A_prev, W, b, activation):
 
     return A, cache
 
-def L_model_forward(X, parameters):
+def L_model_forward(X, parameters): #, keep_prob=0.5):
     """
     Implement forward propagation for the [LINEAR->RELU]*(L-1)->LINEAR->SIGMOID computation
     
@@ -230,12 +230,19 @@ def L_model_forward(X, parameters):
 
     caches = []
     A = X
+    paramDrop = {}
     L = len(parameters) // 2                  # number of layers in the neural network
     
     # Implement [LINEAR -> RELU]*(L-1). Add "cache" to the "caches" list.
     for l in range(1, L):
         A_prev = A 
         A, cache = linear_activation_forward(A_prev, parameters['W' + str(l)], parameters['b' + str(l)], activation = "relu")
+        # Dropout
+        #if l == 1 or l == 3:
+        #    paramDrop['D' + str(l)] = np.random.rand(A.shape[0], A.shape[1])                                         # Step 1: initialize matrix D1 = np.random.rand(..., ...)
+        #    paramDrop['D' + str(l)] = paramDrop['D' + str(l)] < keep_prob                                         # Step 2: convert entries of D1 to 0 or 1 (using keep_prob as the threshold)
+        #    A = np.multiply(A,paramDrop['D' + str(l)])                                         # Step 3: shut down some neurons of A1
+        #    A = A/keep_prob  
         caches.append(cache)
     
     # Implement LINEAR -> SIGMOID. Add "cache" to the "caches" list.
@@ -337,6 +344,7 @@ def L_model_backward(AL, Y, caches):
              grads["dW" + str(l)] = ...
              grads["db" + str(l)] = ... 
     """
+    
     grads = {}
     L = len(caches) # the number of layers
     m = AL.shape[1]
@@ -356,6 +364,14 @@ def L_model_backward(AL, Y, caches):
         grads["dA" + str(l + 1)] = dA_prev_temp
         grads["dW" + str(l + 1)] = dW_temp
         grads["db" + str(l + 1)] = db_temp
+        # Dropout
+        #if l == 3 or l == 1:
+        #    #print(l, paramDrop["D" + str(l)].shape, paramDrop["D" + str(l)])
+        #    dA = grads["dA" + str(l + 1)]
+        #    dD = paramDrop["D" + str(l)]
+        #    dA = dA*dD              # Step 1: Apply mask D2 to shut down the same neurons as during the forward propagation
+        #    dA = dA/keep_prob
+        #    grads["dA" + str(l + 1)] = dA
 
     return grads
 
