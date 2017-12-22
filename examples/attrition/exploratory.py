@@ -23,7 +23,7 @@
 import numpy as np
 import pandas as pd
 
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.preprocessing import LabelEncoder, StandardScaler, OneHotEncoder
 from sklearn.model_selection import train_test_split
 
 import matplotlib.pyplot as plt
@@ -42,6 +42,11 @@ test_req = pd.read_csv('input/test_requerimientos.csv')
 #train.describe()
 #train.isnull().any()
 #train.std()
+
+tmp = train_req[['ID_CORRELATIVO', 'DICTAMEN']].groupby(['ID_CORRELATIVO'], as_index=False).agg(lambda x:x.value_counts().index[0])
+train = pd.merge(train, tmp, how='left', on='ID_CORRELATIVO')
+
+# new_train = pd.get_dummies(new_train["DICTAMEN"])  # one hot encoding
 
 # Cleaning data
 # Dropping CODMES bc std = 0 (same value for all examples)
