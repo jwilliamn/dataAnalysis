@@ -22,211 +22,165 @@
 
 import numpy as np
 import pandas as pd
-
-from sklearn.preprocessing import LabelEncoder, StandardScaler
-from sklearn.model_selection import train_test_split
-
+import tensorflow as tf
 import matplotlib.pyplot as plt
-from attrition_app_utils import *
+
+from tensorflow.python.framework import ops
+from tf_utils import load_dataset, random_mini_batches, convert_to_one_hot, predict
+
+
+# GLobal settings ####
+# Network params
+N1 = 64  # Number of cells in hidden layer 1
+N2 = 32
+N3 = 4
+N4 = 2 
 
 
 
-# Input ##
-train = pd.read_csv('input/train_clientes.csv')
-test = pd.read_csv('input/test_clientes.csv')
+# Functions of the model
+def create_placeholders(n_x, n_y):
+    X = tf.placeholder(dtype=tf.float32, shape=[n_x, None], name = 'X_placeholder')
+    Y = tf.placeholder(dtype=tf.float32, shape=[n_y, None], name = 'Y_placeholder')
+    return X, Y
 
-
-# Exploratory Analysis ##
-#train.describe()
-#train.isnull().any()
-#train.std()
-
-# Cleaning data
-# Dropping CODMES bc std = 0 (same value for all examples)
-train = train.drop(["CODMES"], axis=1)
-test= test.drop(["CODMES"], axis=1)
-
-# Dealing with NaN values
-train["RANG_INGRESO"].isnull().sum()
-train["FLAG_LIMA_PROVINCIA"].isnull().sum()
-train["EDAD"].isnull().sum()
-train["ANTIGUEDAD"].isnull().sum()
-
-# Data imputation
-# train = train.dropna(axis=0)  # dataset without missing values
-# test = test.dropna(axis=0)
-
-# Numerical variable, replacing 'nan' values with the mean
-train["EDAD"] = train["EDAD"].fillna(int(train["EDAD"].mean()))  # int(train["EDAD"].mean()) <<<
-train["ANTIGUEDAD"] = train["ANTIGUEDAD"].fillna(int(train["ANTIGUEDAD"].mean()))
-test["EDAD"] = test["EDAD"].fillna(int(test["EDAD"].mean()))
-test["ANTIGUEDAD"] = test["ANTIGUEDAD"].fillna(int(test["ANTIGUEDAD"].mean()))
-
-# Categorical variable, replacing missing values with the most frequent value
-train = train.apply(lambda x:x.fillna(x.value_counts().index[0]))  
-test = test.apply(lambda x:x.fillna(x.value_counts().index[0]))  
-
-# Encoding categorical data 
-# RANG_NRO_PRODUCTOS_MENOS0, RANG_SDO_PASIVO_MENOS0, FLAG_LIMA_PROVINCIA, 
-# RANG_INGRESO, converting from string to numerical values
-labelencoder_X = LabelEncoder()
-
-#labelencoder_X.fit(train["RANG_INGRESO"])
-#labelencoder_X.classes_  # 9 classes
-#labelencoder_X.fit(train["FLAG_LIMA_PROVINCIA"])
-#labelencoder_X.classes_  # 2 classes
-#labelencoder_X.fit(train["RANG_SDO_PASIVO_MENOS0"])
-#labelencoder_X.classes_  # 15 classes
-#labelencoder_X.fit(train["RANG_NRO_PRODUCTOS_MENOS0"])
-#labelencoder_X.classes_  # 6 classes
-
-train["RANG_INGRESO"] = labelencoder_X.fit_transform(train["RANG_INGRESO"])
-train["FLAG_LIMA_PROVINCIA"] = labelencoder_X.fit_transform(train["FLAG_LIMA_PROVINCIA"])
-train["RANG_SDO_PASIVO_MENOS0"] = labelencoder_X.fit_transform(train["RANG_SDO_PASIVO_MENOS0"])
-train["RANG_NRO_PRODUCTOS_MENOS0"] = labelencoder_X.fit_transform(train["RANG_NRO_PRODUCTOS_MENOS0"])
-
-labelencoder_X_test = LabelEncoder()
-test["RANG_INGRESO"] = labelencoder_X_test.fit_transform(test["RANG_INGRESO"])
-test["FLAG_LIMA_PROVINCIA"] = labelencoder_X_test.fit_transform(test["FLAG_LIMA_PROVINCIA"])
-test["RANG_SDO_PASIVO_MENOS0"] = labelencoder_X_test.fit_transform(test["RANG_SDO_PASIVO_MENOS0"])
-test["RANG_NRO_PRODUCTOS_MENOS0"] = labelencoder_X_test.fit_transform(test["RANG_NRO_PRODUCTOS_MENOS0"])
-
-# Separating training data into features and labels
-X = train.drop(['ID_CORRELATIVO', 'ATTRITION'], axis=1)
-Y = train['ATTRITION']
-
-X = X.as_matrix()
-Y = np.array(Y)
-
-# Formatting test data
-X_test = test.drop(['ID_CORRELATIVO'], axis=1)
-X_test = X_test.as_matrix()
-
-# Splitting the data (if applicable) into training and test set (subset)
-#X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size = 0.2)
-X_train, y_train = X, Y
-
-# Feature scaling
-sc = StandardScaler()
-X_train = sc.fit_transform(X_train)
-X_test = sc.fit_transform(X_test)
-
-
-# Appropiate Reshaping to feed the network
-X_train = X_train.T
-X_test = X_test.T
-
-y_train = y_train.reshape((1, len(y_train)))
-#y_test = y_test.reshape((1, len(y_test)))
-
-# Modeling ##
-# Hyperparameters setting - model design
-dropout = 0.1
-epochs = 100
-batch_size = 30
-optimizer = 'adam'
-k = 20
-
-### CONSTANTS DEFINING THE MODEL ####
-layers_dims = [50, 16, 4, 2, 1]  #[50, 64, 32, 4, 2, 1]  # 6-layer model & lr=0.08
-lr = 0.08  #lr was 0.009,
-kp = 0.8
-
-# L-layer Neural Network
-def L_layer_model(X, Y, layers_dims, learning_rate = 0.05, num_iterations = 3000, print_cost=False):  #lr was 0.009
+def initialize_parameters(n_x):
     """
-    L-layer neural network: 
-    Arquitecture: [LINEAR->RELU]*(L-1)->LINEAR->SIGMOID.
-    
-    Arguments:
-    X -- data, numpy array of shape (features, number of examples)
-    Y -- true "label" vector (containing 0 if non-Attrition, 1 if Attrition), of shape (1, number of examples)
-    layers_dims -- list containing the input size and each layer size, of length (number of layers + 1).
-    learning_rate -- learning rate of the gradient descent update rule
-    num_iterations -- number of iterations of the optimization loop
-    print_cost -- if True, it prints the cost every 100 steps
+    Initializes parameters to build a neural network with tensorflow. The shapes are:
+                        W1 : [25, 12288]
+                        b1 : [25, 1]
+                        W2 : [12, 25]
+                        b2 : [12, 1]
+                        W3 : [6, 12]
+                        b3 : [6, 1]
     
     Returns:
-    parameters -- parameters learnt by the model. They can then be used to predict.
+    parameters -- a dictionary of tensors containing W1, b1, W2, b2, W3, b3
     """
-
-    np.random.seed(1)
-    costs = []                         # keep track of cost
     
-    # Parameters initialization.
-    parameters = initialize_parameters_deep(layers_dims)
+    W1 = tf.get_variable(name="W1", shape=[64, n_x], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
+    b1 = tf.get_variable(name="b1", shape=[64, 1], initializer = tf.zeros_initializer())
+    W2 = tf.get_variable(name="W2", shape=[32, 64], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
+    b2 = tf.get_variable(name="b2", shape=[32, 1], initializer = tf.zeros_initializer())
+    W3 = tf.get_variable(name="W3", shape=[4, 32], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
+    b3 = tf.get_variable(name="b3", shape=[4, 1], initializer = tf.zeros_initializer())
+    W4 = tf.get_variable(name="W4", shape=[2, 4], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
+    b4 = tf.get_variable(name="b4", shape=[2, 1], initializer = tf.zeros_initializer())
+    W5 = tf.get_variable(name="W5", shape=[1, 2], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
+    b5 = tf.get_variable(name="b5", shape=[1, 1], initializer = tf.zeros_initializer())
     
-    # Loop (gradient descent)
-    for i in range(0, num_iterations):
-        # Forward propagation: [LINEAR -> RELU]*(L-1) -> LINEAR -> SIGMOID.
-        AL, caches = L_model_forward(X, parameters)
-        
-        # Compute cost.
-        cost = compute_cost(AL, Y)
-    
-        # Backward propagation.
-        grads = L_model_backward(AL, Y, caches)
- 
-        # Update parameters.
-        parameters = update_parameters(parameters, grads, learning_rate)
-                
-        # Print the cost every 500 training example
-        if print_cost and i % 500 == 0:
-            print ("Cost after iteration %i: %f" %(i, cost))
-        if print_cost and i % 100 == 0:
-            costs.append(cost)
-            
-    # plot the cost
-    plt.plot(np.squeeze(costs))
-    plt.ylabel('cost')
-    plt.xlabel('iterations (per tens)')
-    plt.title("Learning rate =" + str(learning_rate))
-    plt.show()
+    parameters = {"W1": W1,
+                  "b1": b1,
+                  "W2": W2,
+                  "b2": b2,
+                  "W3": W3,
+                  "b3": b3,
+                  "W4": W4,
+                  "b4": b4}
     
     return parameters
 
 
-# Training the model as a 6-layer neural network. 
-parameters = L_layer_model(X_train, y_train, layers_dims, learning_rate=lr, num_iterations = 30000, print_cost = True)
+# Model design ####
+def model(X_train, Y_train, X_test, Y_test, learning_rate = 0.0001,
+          num_epochs = 1500, minibatch_size = 32, print_cost = True):
+    """
+    Implements a five-layer tensorflow neural network: 
+        LINEAR->RELU->LINEAR->RELU->LINEAR->SOFTMAX.
+    
+    Arguments:
+    X_train -- training set, of shape (input size = , number of training examples = )
+    Y_train -- test set, of shape (output size = , number of training examples = )
+    X_test -- training set, of shape (input size = , number of training examples = )
+    Y_test -- test set, of shape (output size = , number of test examples = )
+    learning_rate -- learning rate of the optimization
+    num_epochs -- number of epochs of the optimization loop
+    minibatch_size -- size of a minibatch
+    print_cost -- True to print the cost every 100 epochs
+    
+    Returns:
+    parameters -- parameters learnt by the model. They can then be used to predict.
+    """
+    
+    ops.reset_default_graph()                         # to be able to rerun the model without overwriting tf variables
+    tf.set_random_seed(1)                             # to keep consistent results
+    seed = 3                                          # to keep consistent results
+    (n_x, m) = X_train.shape                          # (n_x: input size, m : number of examples in the train set)
+    n_y = Y_train.shape[0]                            # n_y : output size
+    costs = []                                        # To keep track of the cost
+    
+    # Placeholders
+    X, Y = create_placeholders(n_x, n_y)
 
-pred_train, prob_train = predict(X_train, y_train, parameters)
-#pred_test, prob_test = predict(X_test, y_test, parameters)
-prob_test, _ = L_model_forward(X_test, parameters)
+    # Initialize parameters
+    parameters = initialize_parameters(n_x)
+    
+    # Forward propagation: Build the forward propagation in the tensorflow graph
+    Z3 = forward_propagation(X, parameters)
+    
+    # Cost function: Add cost function to tensorflow graph
+    cost = compute_cost(Z3, Y)
+    
+    # Backpropagation: Define the tensorflow optimizer. Use an AdamOptimizer.
+    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+    
+    # Initialize all the variables
+    init = tf.global_variables_initializer()
 
-# Saving probabilities to send for testing
-#train['prob_'] = prob_train.T
-test['ATTRITION'] = prob_test.T
+    # Start the session to compute the tensorflow graph
+    with tf.Session() as sess:
+        
+        # Run the initialization
+        sess.run(init)
+        
+        # Do the training loop
+        for epoch in range(num_epochs):
 
-send = test[['ID_CORRELATIVO','ATTRITION']]
+            epoch_cost = 0.                       # Defines a cost related to an epoch
+            num_minibatches = int(m / minibatch_size) # number of minibatches of size minibatch_size in the train set
+            seed = seed + 1
+            minibatches = random_mini_batches(X_train, Y_train, minibatch_size, seed)
 
-send.to_csv("output/testProb.csv", index=False)
+            for minibatch in minibatches:
 
+                # Select a minibatch
+                (minibatch_X, minibatch_Y) = minibatch
+                
+                # IMPORTANT: The line that runs the graph on a minibatch.
+                # Run the session to execute the "optimizer" and the "cost", the feedict should contain a minibatch for (X,Y).
+                ### START CODE HERE ### (1 line)
+                _ , minibatch_cost = sess.run([optimizer, cost], feed_dict={X:minibatch_X, Y:minibatch_Y})
+                ### END CODE HERE ###
+                
+                epoch_cost += minibatch_cost / num_minibatches
 
+            # Print the cost every epoch
+            if print_cost == True and epoch % 100 == 0:
+                print ("Cost after epoch %i: %f" % (epoch, epoch_cost))
+            if print_cost == True and epoch % 5 == 0:
+                costs.append(epoch_cost)
+                
+        # plot the cost
+        plt.plot(np.squeeze(costs))
+        plt.ylabel('cost')
+        plt.xlabel('iterations (per tens)')
+        plt.title("Learning rate =" + str(learning_rate))
+        plt.show()
 
+        # lets save the parameters in a variable
+        parameters = sess.run(parameters)
+        print ("Parameters have been trained!")
 
+        # Calculate the correct predictions
+        correct_prediction = tf.equal(tf.argmax(Z3), tf.argmax(Y))
 
+        # Calculate accuracy on the test set
+        accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        print ("Train Accuracy:", accuracy.eval({X: X_train, Y: Y_train}))
+        print ("Test Accuracy:", accuracy.eval({X: X_test, Y: Y_test}))
+        
+        return parameters
 
 
 

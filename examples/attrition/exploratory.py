@@ -25,7 +25,7 @@
 import numpy as np
 import pandas as pd
 
-from sklearn.preprocessing import LabelEncoder, StandardScaler, OneHotEncoder
+from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from fancyimpute import MICE
 
@@ -45,6 +45,7 @@ test_req = pd.read_csv('input/test_requerimientos.csv')
 trainTmp = train.copy()
 trainTmp = trainTmp.drop(['ATTRITION'], axis=1)
 
+
 data = pd.concat([trainTmp, test])
 
 data.describe()
@@ -52,8 +53,8 @@ data.isnull().any()
 data.std()
 data.dtypes
 
-# Checking which variables are categories and its values: RANG_INGRESO, FLAG_LIMA_PROVINCIA, 
-# RANG_SDO_PASIVO_MENOS0, RANG_NRO_PRODUCTOS_MENOS0
+# Checking which variables are categories 'data.dtypes': RANG_INGRESO, FLAG_LIMA_PROVINCIA, 
+# RANG_SDO_PASIVO_MENOS0, RANG_NRO_PRODUCTOS_MENOS0 then map to numbers.
 data['RANG_INGRESO'] = data['RANG_INGRESO'].map({'Rang_ingreso_01':1, 'Rang_ingreso_02':2, 'Rang_ingreso_03':3, 
                                                  'Rang_ingreso_04':4, 'Rang_ingreso_05':5, 'Rang_ingreso_06':6,
                                                  'Rang_ingreso_07':7, 'Rang_ingreso_08':8, 'Rang_ingreso_09':9})
@@ -68,24 +69,11 @@ data['RANG_NRO_PRODUCTOS_MENOS0'] = data['RANG_NRO_PRODUCTOS_MENOS0'].map({'Rang
 #data["RANG_INGRESO"].astype('category').cat.categories
 #data['RANG_INGRESO'].value_counts()
 
-#train.describe()
-#train.isnull().any()
-#train.std()
-#train.dtypes
 
 # Cleaning data ####
-# Dropping CODMES bc std = 0 (same value for all examples)
-train = train.drop(["CODMES"], axis=1)
-test= test.drop(["CODMES"], axis=1)
+# Dropping CODMES bc std = 0 (same value for all examples) 'data.std()'
+data = data.drop(["CODMES"], axis=1)
 
-# Dealing with NaN values
-train["RANG_INGRESO"].isnull().sum()
-train["FLAG_LIMA_PROVINCIA"].isnull().sum()
-train["EDAD"].isnull().sum()
-train["ANTIGUEDAD"].isnull().sum()
-
-train["RANG_INGRESO"].describe()
-train["RANG_INGRESO"].astype('category').cat.categories  # Check the number and labels of categories
 
 # Data imputation ####
 # train = train.dropna(axis=0)  # dataset without missing values
@@ -107,8 +95,8 @@ x_filled = MICE().complete(x)
 # Imputed values to int
 #x_tmp = x_filled[:,3].astype(int)  # just one column
 x_filled = x_filled.astype(int)
-x_filled_df = pd.DataFrame(x_filled)
-x_filled_df = x_filled_df.rename(index = str, columns={'0': 'ID_CORRELATIVO'})
+x_filled = pd.DataFrame(x_filled)
+x_filled.columns = data.columns
 
 # Merge with second table - Adding new features
 data_req = pd.concat([train_req, test_req])
@@ -116,34 +104,81 @@ data_req_tmp = data_req[['ID_CORRELATIVO', 'DICTAMEN']].groupby(['ID_CORRELATIVO
 #len(np.unique(data_req_tmp['ID_CORRELATIVO']))
 #List unique values in the df['name'] column
 #df.name.unique()
-data = pd.merge(data, data_req_tmp, how='left', on='ID_CORRELATIVO')
+data = pd.merge(x_filled, data_req_tmp, how='left', on='ID_CORRELATIVO')
+#data_ = pd.get_dummies(data)
 
-# new_train = pd.get_dummies(new_train["DICTAMEN"])  # one hot encoding
+# Encoding categorical variables ####
+# RANG_INGRESO, RANG_SDO_PASIVO_MENOS0, RANG_NRO_PRODUCTOS_MENOS0, converting to onehot variables
+data['RANG_INGRESO'] = data['RANG_INGRESO'].astype(object)
+
+data['RANG_SDO_PASIVO_MENOS0'] = data['RANG_SDO_PASIVO_MENOS0'].astype(object)
+data['RANG_NRO_PRODUCTOS_MENOS0'] = data['RANG_NRO_PRODUCTOS_MENOS0'].astype(object)
+data = pd.get_dummies(data)
+
+data = data.astype(int)
+
+# Split data to the original train and test set
+train_ = data[0:70000].copy()
+test_ = data[70000:100000].copy()
+
+Xtest = test_.drop(['ID_CORRELATIVO'], axis=1)
+Xtest = Xtest.as_matrix()
+
+X = train_.drop(['ID_CORRELATIVO'], axis=1)
+X = X.as_matrix()
+
+Y = train['ATTRITION']
+Y = np.array(Y)
+
+# Assuming train_ as the whole dataset, then split it into tiny train and test set
+X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size = 0.15)
+
+# Feature scaling ####
+scaler = StandardScaler().fit(X_train)
+X_train = scaler.transform(X_train)
+X_test = scaler.transform(X_test)
+
+Xtest = scaler.transform(Xtest)
+
+
+# Reshaping data to feed the network
+X_train = X_train.T
+X_test = X_test.T
+Xtest = Xtest.T
+
+y_train = y_train.reshape((1, len(y_train)))
+y_test = y_test.reshape((1, len(y_test)))
 
 
 
 
-# Encoding categorical data ####
-# RANG_NRO_PRODUCTOS_MENOS0, RANG_SDO_PASIVO_MENOS0, FLAG_LIMA_PROVINCIA, 
-# RANG_INGRESO, converting from string to numerical values
-labelencoder_X = LabelEncoder()
 
-#labelencoder_X.fit(train["RANG_INGRESO"])
-#labelencoder_X.classes_  # 9 classes
-#labelencoder_X.fit(train["FLAG_LIMA_PROVINCIA"])
-#labelencoder_X.classes_  # 2 classes
-#labelencoder_X.fit(train["RANG_SDO_PASIVO_MENOS0"])
-#labelencoder_X.classes_  # 15 classes
-#labelencoder_X.fit(train["RANG_NRO_PRODUCTOS_MENOS0"])
-#labelencoder_X.classes_  # 6 classes
 
-train["RANG_INGRESO"] = labelencoder_X.fit_transform(train["RANG_INGRESO"])
-train["FLAG_LIMA_PROVINCIA"] = labelencoder_X.fit_transform(train["FLAG_LIMA_PROVINCIA"])
-train["RANG_SDO_PASIVO_MENOS0"] = labelencoder_X.fit_transform(train["RANG_SDO_PASIVO_MENOS0"])
-train["RANG_NRO_PRODUCTOS_MENOS0"] = labelencoder_X.fit_transform(train["RANG_NRO_PRODUCTOS_MENOS0"])
 
-labelencoder_X_test = LabelEncoder()
-test["RANG_INGRESO"] = labelencoder_X_test.fit_transform(test["RANG_INGRESO"])
-test["FLAG_LIMA_PROVINCIA"] = labelencoder_X_test.fit_transform(test["FLAG_LIMA_PROVINCIA"])
-test["RANG_SDO_PASIVO_MENOS0"] = labelencoder_X_test.fit_transform(test["RANG_SDO_PASIVO_MENOS0"])
-test["RANG_NRO_PRODUCTOS_MENOS0"] = labelencoder_X_test.fit_transform(test["RANG_NRO_PRODUCTOS_MENOS0"])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
