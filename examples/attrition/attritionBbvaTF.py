@@ -26,11 +26,12 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 from tensorflow.python.framework import ops
-from tf_utils import load_dataset, random_mini_batches, convert_to_one_hot, predict
+from tf_utils import load_dataset, random_mini_batches, convert_to_one_hot #, predict
+from exploratory import X_train, X_test, y_train, y_test, Xtest
 
 
 # GLobal settings ####
-# Network params
+# Network Hyperparameters
 N1 = 64  # Number of cells in hidden layer 1
 N2 = 32
 N3 = 4
@@ -46,27 +47,21 @@ def create_placeholders(n_x, n_y):
 
 def initialize_parameters(n_x):
     """
-    Initializes parameters to build a neural network with tensorflow. The shapes are:
-                        W1 : [25, 12288]
-                        b1 : [25, 1]
-                        W2 : [12, 25]
-                        b2 : [12, 1]
-                        W3 : [6, 12]
-                        b3 : [6, 1]
+    Initializes parameters to build a neural network with tensorflow.
     
     Returns:
-    parameters -- a dictionary of tensors containing W1, b1, W2, b2, W3, b3
+    parameters -- a dictionary of tensors containing W1, b1, W2, b2, W3, b3, ...
     """
     
-    W1 = tf.get_variable(name="W1", shape=[64, n_x], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
-    b1 = tf.get_variable(name="b1", shape=[64, 1], initializer = tf.zeros_initializer())
-    W2 = tf.get_variable(name="W2", shape=[32, 64], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
-    b2 = tf.get_variable(name="b2", shape=[32, 1], initializer = tf.zeros_initializer())
-    W3 = tf.get_variable(name="W3", shape=[4, 32], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
-    b3 = tf.get_variable(name="b3", shape=[4, 1], initializer = tf.zeros_initializer())
-    W4 = tf.get_variable(name="W4", shape=[2, 4], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
-    b4 = tf.get_variable(name="b4", shape=[2, 1], initializer = tf.zeros_initializer())
-    W5 = tf.get_variable(name="W5", shape=[1, 2], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
+    W1 = tf.get_variable(name="W1", shape=[N1, n_x], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
+    b1 = tf.get_variable(name="b1", shape=[N1, 1], initializer = tf.zeros_initializer())
+    W2 = tf.get_variable(name="W2", shape=[N2, N1], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
+    b2 = tf.get_variable(name="b2", shape=[N2, 1], initializer = tf.zeros_initializer())
+    W3 = tf.get_variable(name="W3", shape=[N3, N2], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
+    b3 = tf.get_variable(name="b3", shape=[N3, 1], initializer = tf.zeros_initializer())
+    W4 = tf.get_variable(name="W4", shape=[N4, N3], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
+    b4 = tf.get_variable(name="b4", shape=[N4, 1], initializer = tf.zeros_initializer())
+    W5 = tf.get_variable(name="W5", shape=[1, N4], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
     b5 = tf.get_variable(name="b5", shape=[1, 1], initializer = tf.zeros_initializer())
     
     parameters = {"W1": W1,
@@ -76,13 +71,94 @@ def initialize_parameters(n_x):
                   "W3": W3,
                   "b3": b3,
                   "W4": W4,
-                  "b4": b4}
+                  "b4": b4,
+                  "W5": W5,
+                  "b5": b5}
     
     return parameters
 
+def forward_propagation(X, parameters):
+    """
+    Implements the forward propagation for the model: LINEAR -> RELU -> LINEAR -> RELU -> LINEAR -> SOFTMAX
+    
+    Arguments:
+    X -- input dataset placeholder, of shape (input size, number of examples)
+    parameters -- python dictionary containing your parameters "W1", "b1", "W2", "b2", "W3", "b3"
+                  the shapes are given in initialize_parameters
+
+    Returns:
+    Z5 -- the output of the last LINEAR unit
+    """
+    
+    # Retrieve the parameters from the dictionary "parameters" 
+    W1 = parameters['W1']
+    b1 = parameters['b1']
+    W2 = parameters['W2']
+    b2 = parameters['b2']
+    W3 = parameters['W3']
+    b3 = parameters['b3']
+    W4 = parameters['W4']
+    b4 = parameters['b4']
+    W5 = parameters['W5']
+    b5 = parameters['b5']
+    
+    # Forward propagation
+    Z1 = tf.add(tf.matmul(W1, X), b1)
+    A1 = tf.nn.relu(Z1)
+    Z2 = tf.add(tf.matmul(W2, A1), b2)
+    A2 = tf.nn.relu(Z2)
+    Z3 = tf.add(tf.matmul(W3, A2), b3)
+    A3 = tf.nn.relu(Z3)
+    Z4 = tf.add(tf.matmul(W4, A3), b4)
+    A4 = tf.nn.relu(Z4)
+    Z5 = tf.add(tf.matmul(W5, A4), b5)
+    
+    return Z5
+
+def compute_cost(Z5, Y):
+    """
+    Computes the cost
+    
+    Arguments:
+    Z3 -- output of forward propagation (output of the last LINEAR unit), of shape (6, number of examples)
+    Y -- "true" labels vector placeholder, same shape as Z3
+    
+    Returns:
+    cost - Tensor of the cost function
+    """
+    
+    logits = tf.transpose(Z5)
+    labels = tf.transpose(Y)
+    
+    cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=labels))
+    
+    return cost
+
+def predict(probs, y):    
+    m = len(probs)
+    print("m: ", m, " probs.shape ", probs.shape(1))
+    p = np.zeros((1,m))
+    
+    # convert probas to 0/1 predictions
+    for i in range(0, probs.shape[1]):
+        if probs[0,i] > 0.5:
+            p[0,i] = 1
+        else:
+            p[0,i] = 0
+    
+    #print results
+    #print ("predictions: " + str(p))
+    #print ("true labels: " + str(y))
+    print("Accuracy: "  + str(np.sum((p == y)/m)))
+        
+    return p, probs
+
+
+
+
 
 # Model design ####
-def model(X_train, Y_train, X_test, Y_test, learning_rate = 0.0001,
+def model(X_train, Y_train, X_test, Y_test, Xtest, learning_rate = 0.0001,
           num_epochs = 1500, minibatch_size = 32, print_cost = True):
     """
     Implements a five-layer tensorflow neural network: 
@@ -116,14 +192,18 @@ def model(X_train, Y_train, X_test, Y_test, learning_rate = 0.0001,
     parameters = initialize_parameters(n_x)
     
     # Forward propagation: Build the forward propagation in the tensorflow graph
-    Z3 = forward_propagation(X, parameters)
+    Z5 = forward_propagation(X, parameters)
+    
+    train_prob = tf.nn.softmax(logits= tf.transpose(Z5))
     
     # Cost function: Add cost function to tensorflow graph
-    cost = compute_cost(Z3, Y)
+    cost = compute_cost(Z5, Y)
     
-    # Backpropagation: Define the tensorflow optimizer. Use an AdamOptimizer.
+    # Backpropagation: Using AdamOptimizer.
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
     
+    test_pred = tf.nn.softmax(logits= tf.transpose(forward_propagation(X_test, parameters)))
+    realTest_pred = tf.nn.softmax(logits= tf.transpose(forward_propagation(Xtest, parameters)))
     # Initialize all the variables
     init = tf.global_variables_initializer()
 
@@ -138,7 +218,6 @@ def model(X_train, Y_train, X_test, Y_test, learning_rate = 0.0001,
 
             epoch_cost = 0.                       # Defines a cost related to an epoch
             num_minibatches = int(m / minibatch_size) # number of minibatches of size minibatch_size in the train set
-            seed = seed + 1
             minibatches = random_mini_batches(X_train, Y_train, minibatch_size, seed)
 
             for minibatch in minibatches:
@@ -148,9 +227,9 @@ def model(X_train, Y_train, X_test, Y_test, learning_rate = 0.0001,
                 
                 # IMPORTANT: The line that runs the graph on a minibatch.
                 # Run the session to execute the "optimizer" and the "cost", the feedict should contain a minibatch for (X,Y).
-                ### START CODE HERE ### (1 line)
-                _ , minibatch_cost = sess.run([optimizer, cost], feed_dict={X:minibatch_X, Y:minibatch_Y})
-                ### END CODE HERE ###
+                
+                _ , minibatch_cost, probs = sess.run([optimizer, cost, train_prob], feed_dict={X:minibatch_X, Y:minibatch_Y})
+                
                 
                 epoch_cost += minibatch_cost / num_minibatches
 
@@ -172,10 +251,11 @@ def model(X_train, Y_train, X_test, Y_test, learning_rate = 0.0001,
         print ("Parameters have been trained!")
 
         # Calculate the correct predictions
-        correct_prediction = tf.equal(tf.argmax(Z3), tf.argmax(Y))
+        pred, probs = predict(probs, Y)
+        #correct_prediction = tf.equal(tf.argmax(Z5), tf.argmax(Y))
 
         # Calculate accuracy on the test set
-        accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
+        accuracy = tf.reduce_mean(tf.cast(p, "float"))
 
         print ("Train Accuracy:", accuracy.eval({X: X_train, Y: Y_train}))
         print ("Test Accuracy:", accuracy.eval({X: X_test, Y: Y_test}))
@@ -185,7 +265,7 @@ def model(X_train, Y_train, X_test, Y_test, learning_rate = 0.0001,
 
 
 
-
+parameters = model(X_train, y_train, X_test, y_test)
 
 
 
