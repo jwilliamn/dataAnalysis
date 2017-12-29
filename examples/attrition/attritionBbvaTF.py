@@ -32,7 +32,8 @@ from exploratory import X_train, X_test, y_train, y_test, Xtest
 
 # GLobal settings ####
 # Network Hyperparameters
-N1 = 64  # Number of cells in hidden layer 1
+# Number of cells in hidden layer 1,...
+N1 = 64  
 N2 = 32
 N3 = 4
 N4 = 2 
@@ -44,6 +45,10 @@ def create_placeholders(n_x, n_y):
     X = tf.placeholder(dtype=tf.float32, shape=[n_x, None], name = 'X_placeholder')
     Y = tf.placeholder(dtype=tf.float32, shape=[n_y, None], name = 'Y_placeholder')
     return X, Y
+
+X_teste = tf.constant(X_test, dtype= tf.float32)
+Xteste = tf.constant(Xtest, dtype=tf.float32)
+
 
 def initialize_parameters(n_x):
     """
@@ -130,35 +135,44 @@ def compute_cost(Z5, Y):
     logits = tf.transpose(Z5)
     labels = tf.transpose(Y)
     
+    
     cost = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=labels))
     
     return cost
 
-def predict(probs, y):    
-    m = len(probs)
-    print("m: ", m, " probs.shape ", probs.shape(1))
-    p = np.zeros((1,m))
+def predict(probs):    
+    m = probs.shape[0]
+    print("m: ", m)
+    print(" probs.shape ", probs.shape)
+    p = np.zeros((m,1))
     
     # convert probas to 0/1 predictions
-    for i in range(0, probs.shape[1]):
-        if probs[0,i] > 0.5:
-            p[0,i] = 1
+    for i in range(0, probs.shape[0]):
+        if probs[i,0] > 0.5:
+            p[i,0] = 1
         else:
-            p[0,i] = 0
+            p[i,0] = 0
     
     #print results
     #print ("predictions: " + str(p))
     #print ("true labels: " + str(y))
-    print("Accuracy: "  + str(np.sum((p == y)/m)))
+    #print("Accuracy: "  + str(np.sum((p == y)/m)))
         
     return p, probs
 
 
+def accuracy2(predictions, labels):
+    return np.sum((predictions == labels)/predictions.shape[0])
 
-
+#Y_train, Y_test = y_train, y_test
+#
+#learning_rate = 0.01
+#num_epochs = 1
+#minibatch_size = 32
+#print_cost = True
 
 # Model design ####
-def model(X_train, Y_train, X_test, Y_test, Xtest, learning_rate = 0.0001,
+def model(X_train, Y_train, X_teste, Y_test, Xteste, learning_rate = 0.0001,
           num_epochs = 1500, minibatch_size = 32, print_cost = True):
     """
     Implements a five-layer tensorflow neural network: 
@@ -178,7 +192,7 @@ def model(X_train, Y_train, X_test, Y_test, Xtest, learning_rate = 0.0001,
     parameters -- parameters learnt by the model. They can then be used to predict.
     """
     
-    ops.reset_default_graph()                         # to be able to rerun the model without overwriting tf variables
+    #ops.reset_default_graph()                         # to be able to rerun the model without overwriting tf variables
     tf.set_random_seed(1)                             # to keep consistent results
     seed = 3                                          # to keep consistent results
     (n_x, m) = X_train.shape                          # (n_x: input size, m : number of examples in the train set)
@@ -194,7 +208,7 @@ def model(X_train, Y_train, X_test, Y_test, Xtest, learning_rate = 0.0001,
     # Forward propagation: Build the forward propagation in the tensorflow graph
     Z5 = forward_propagation(X, parameters)
     
-    train_prob = tf.nn.softmax(logits= tf.transpose(Z5))
+    train_prob = tf.nn.sigmoid(x= tf.transpose(Z5))
     
     # Cost function: Add cost function to tensorflow graph
     cost = compute_cost(Z5, Y)
@@ -202,8 +216,8 @@ def model(X_train, Y_train, X_test, Y_test, Xtest, learning_rate = 0.0001,
     # Backpropagation: Using AdamOptimizer.
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
     
-    test_pred = tf.nn.softmax(logits= tf.transpose(forward_propagation(X_test, parameters)))
-    realTest_pred = tf.nn.softmax(logits= tf.transpose(forward_propagation(Xtest, parameters)))
+    test_prob = tf.nn.sigmoid(x= tf.transpose(forward_propagation(X_teste, parameters)))
+    realTest_prob = tf.nn.sigmoid(x= tf.transpose(forward_propagation(Xteste, parameters)))
     # Initialize all the variables
     init = tf.global_variables_initializer()
 
@@ -251,21 +265,26 @@ def model(X_train, Y_train, X_test, Y_test, Xtest, learning_rate = 0.0001,
         print ("Parameters have been trained!")
 
         # Calculate the correct predictions
-        pred, probs = predict(probs, Y)
+        pred, probs = predict(train_prob.eval({X: X_train, Y: Y_train}))
+        pred_test, probs_test = predict(test_prob.eval())
+        
+        prob_realtest = realTest_prob.eval()
         #correct_prediction = tf.equal(tf.argmax(Z5), tf.argmax(Y))
 
         # Calculate accuracy on the test set
-        accuracy = tf.reduce_mean(tf.cast(p, "float"))
+        accuracy = tf.reduce_mean(tf.cast(pred, "float"))
 
         print ("Train Accuracy:", accuracy.eval({X: X_train, Y: Y_train}))
-        print ("Test Accuracy:", accuracy.eval({X: X_test, Y: Y_test}))
+        #print ("Test Accuracy:", accuracy.eval({X: X_teste, Y: Y_test}))
+        print("Train Accuracy2:", accuracy2(pred, Y_train.T))
+        print("Test Accuracy2:", accuracy2(pred_test, Y_test.T))
         
-        return parameters
+        return parameters, pred, probs, prob_realtest
 
 
 
 
-parameters = model(X_train, y_train, X_test, y_test)
+parameters = model(X_train, y_train, X_teste, y_test, Xteste)
 
 
 
