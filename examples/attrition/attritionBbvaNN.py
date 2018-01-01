@@ -7,12 +7,14 @@
     Machine learning model to predict the customer attrition probability 
 
     Structure:
+        exploratory.py
+        attrition_app_utils.py
         attritionBbvaNN.py
         input/
-        train_clientes.csv    
-        train_requerimientos.csv
-        test_clientes.csv
-        test_requerimientos.csv
+            train_clientes.csv    
+            train_requerimientos.csv
+            test_clientes.csv
+            test_requerimientos.csv
 
     _copyright_ = 'Copyright (c) 2017 J.W.', see AUTHORS for more details
     _license_ = GNU General Public License, see LICENSE for more details
@@ -126,8 +128,9 @@ optimizer = 'adam'
 k = 20
 
 ### CONSTANTS DEFINING THE MODEL ####
-layers_dims = [50, 64, 32, 4, 2, 1]  #[50, 64, 32, 4, 2, 1]  # 6-layer model & lr=0.08
+layers_dims = [50, 16, 4, 2, 1]  #[50, 64, 32, 4, 2, 1]  # 6-layer model & lr=0.08
 lr = 0.08  #lr was 0.009,
+kp = 0.8
 
 # L-layer Neural Network
 def L_layer_model(X, Y, layers_dims, learning_rate = 0.05, num_iterations = 3000, print_cost=False):  #lr was 0.009
