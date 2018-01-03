@@ -34,12 +34,19 @@ y_test_alt = y_test.copy()
 # GLobal settings ####
 # Network Hyperparameters
 # Number of cells in hidden layer 1,...
-N1 = 80  
-N2 = 32
-N3 = 16  # might delete this
-N4 = 8
-N5 = 4
-N6 = 2
+#N1 = 80  
+#N2 = 32
+#N3 = 16  # might delete this
+#N4 = 8
+#N5 = 4
+#N6 = 2
+
+N1 = 120  
+N2 = 80
+N3 = 64
+N4 = 32
+N5 = 16
+N6 = 4
 
 
 
@@ -126,12 +133,13 @@ def forward_propagation(X, parameters):
     # Forward propagation
     Z1 = tf.add(tf.matmul(W1, X), b1)
     A1 = tf.nn.relu(Z1)
-    A1 = tf.nn.dropout(A1, keep_prob=0.8)
+    A1 = tf.nn.dropout(A1, keep_prob=0.6)
     Z2 = tf.add(tf.matmul(W2, A1), b2)
     A2 = tf.nn.relu(Z2)
-    A2 = tf.nn.dropout(A2, keep_prob=0.9)
+    A2 = tf.nn.dropout(A2, keep_prob=0.8)
     Z3 = tf.add(tf.matmul(W3, A2), b3)
     A3 = tf.nn.relu(Z3)
+    A3 = tf.nn.dropout(A3, keep_prob=0.8)
     Z4 = tf.add(tf.matmul(W4, A3), b4)
     A4 = tf.nn.relu(Z4)
     Z5 = tf.add(tf.matmul(W5, A4), b5)
@@ -195,7 +203,7 @@ def accuracy2(predictions, labels):
 
 # Model design ####
 def model(X_train, Y_train, X_teste, Y_test, Y_test_alt, Xteste, learning_rate = 0.0001,
-          num_epochs = 8500, minibatch_size = 32, print_cost = True):
+          num_epochs = 800, minibatch_size = 32, print_cost = True):
     """
     Implements a five-layer tensorflow neural network: 
         LINEAR->RELU->LINEAR->RELU->LINEAR->SOFTMAX.
@@ -318,7 +326,7 @@ test['ATTRITION'] = prob_realtest
 
 send = test[['ID_CORRELATIVO','ATTRITION']]
 
-send.to_csv("output/testProb1.csv", index=False)
+send.to_csv("output/testProb2_.csv", index=False)
 
 
 
