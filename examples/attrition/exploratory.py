@@ -131,7 +131,7 @@ Y = train['ATTRITION']
 Y = np.array(Y)
 
 # Assuming train_ as the whole dataset, then split it into tiny train and test set
-X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size = 0.15)
+X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size = 0.2)
 
 # Feature scaling ####
 scaler = StandardScaler().fit(X_train)

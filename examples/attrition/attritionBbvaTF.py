@@ -30,13 +30,16 @@ from tf_utils import load_dataset, random_mini_batches, convert_to_one_hot #, pr
 from exploratory import X_train, X_test, y_train, y_test, Xtest
 
 
+y_test_alt = y_test.copy()
 # GLobal settings ####
 # Network Hyperparameters
 # Number of cells in hidden layer 1,...
-N1 = 64  
+N1 = 80  
 N2 = 32
-N3 = 4
-N4 = 2 
+N3 = 16  # might delete this
+N4 = 8
+N5 = 4
+N6 = 2
 
 
 
@@ -48,6 +51,7 @@ def create_placeholders(n_x, n_y):
 
 X_teste = tf.constant(X_test, dtype= tf.float32)
 Xteste = tf.constant(Xtest, dtype=tf.float32)
+y_test_alt = tf.constant(y_test_alt, dtype=tf.float32)
 
 
 def initialize_parameters(n_x):
@@ -66,8 +70,12 @@ def initialize_parameters(n_x):
     b3 = tf.get_variable(name="b3", shape=[N3, 1], initializer = tf.zeros_initializer())
     W4 = tf.get_variable(name="W4", shape=[N4, N3], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
     b4 = tf.get_variable(name="b4", shape=[N4, 1], initializer = tf.zeros_initializer())
-    W5 = tf.get_variable(name="W5", shape=[1, N4], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
-    b5 = tf.get_variable(name="b5", shape=[1, 1], initializer = tf.zeros_initializer())
+    W5 = tf.get_variable(name="W5", shape=[N5, N4], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
+    b5 = tf.get_variable(name="b5", shape=[N5, 1], initializer = tf.zeros_initializer())
+    W6 = tf.get_variable(name="W6", shape=[N6, N5], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
+    b6 = tf.get_variable(name="b6", shape=[N6, 1], initializer = tf.zeros_initializer())
+    W7 = tf.get_variable(name="W7", shape=[1, N6], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
+    b7 = tf.get_variable(name="b7", shape=[1, 1], initializer = tf.zeros_initializer())
     
     parameters = {"W1": W1,
                   "b1": b1,
@@ -78,7 +86,11 @@ def initialize_parameters(n_x):
                   "W4": W4,
                   "b4": b4,
                   "W5": W5,
-                  "b5": b5}
+                  "b5": b5,
+                  "W6": W6,
+                  "b6": b6,
+                  "W7": W7,
+                  "b7": b7}
     
     return parameters
 
@@ -106,21 +118,31 @@ def forward_propagation(X, parameters):
     b4 = parameters['b4']
     W5 = parameters['W5']
     b5 = parameters['b5']
+    W6 = parameters['W6']
+    b6 = parameters['b6']
+    W7 = parameters['W7']
+    b7 = parameters['b7']
     
     # Forward propagation
     Z1 = tf.add(tf.matmul(W1, X), b1)
     A1 = tf.nn.relu(Z1)
+    A1 = tf.nn.dropout(A1, keep_prob=0.8)
     Z2 = tf.add(tf.matmul(W2, A1), b2)
     A2 = tf.nn.relu(Z2)
+    A2 = tf.nn.dropout(A2, keep_prob=0.9)
     Z3 = tf.add(tf.matmul(W3, A2), b3)
     A3 = tf.nn.relu(Z3)
     Z4 = tf.add(tf.matmul(W4, A3), b4)
     A4 = tf.nn.relu(Z4)
     Z5 = tf.add(tf.matmul(W5, A4), b5)
+    A5 = tf.nn.relu(Z5)
+    Z6 = tf.add(tf.matmul(W6, A5), b6)
+    A6 = tf.nn.relu(Z6)
+    oL = tf.add(tf.matmul(W7, A6), b7)
     
-    return Z5
+    return oL
 
-def compute_cost(Z5, Y):
+def compute_cost(oL, Y):
     """
     Computes the cost
     
@@ -132,7 +154,7 @@ def compute_cost(Z5, Y):
     cost - Tensor of the cost function
     """
     
-    logits = tf.transpose(Z5)
+    logits = tf.transpose(oL)
     labels = tf.transpose(Y)
     
     
@@ -172,8 +194,8 @@ def accuracy2(predictions, labels):
 #print_cost = True
 
 # Model design ####
-def model(X_train, Y_train, X_teste, Y_test, Xteste, learning_rate = 0.0001,
-          num_epochs = 1500, minibatch_size = 32, print_cost = True):
+def model(X_train, Y_train, X_teste, Y_test, Y_test_alt, Xteste, learning_rate = 0.0001,
+          num_epochs = 8500, minibatch_size = 32, print_cost = True):
     """
     Implements a five-layer tensorflow neural network: 
         LINEAR->RELU->LINEAR->RELU->LINEAR->SOFTMAX.
@@ -206,16 +228,17 @@ def model(X_train, Y_train, X_teste, Y_test, Xteste, learning_rate = 0.0001,
     parameters = initialize_parameters(n_x)
     
     # Forward propagation: Build the forward propagation in the tensorflow graph
-    Z5 = forward_propagation(X, parameters)
+    oL = forward_propagation(X, parameters)
     
-    train_prob = tf.nn.sigmoid(x= tf.transpose(Z5))
+    train_prob = tf.nn.sigmoid(x= tf.transpose(oL))
     
     # Cost function: Add cost function to tensorflow graph
-    cost = compute_cost(Z5, Y)
+    cost = compute_cost(oL, Y)
     
     # Backpropagation: Using AdamOptimizer.
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
     
+    cost_test = compute_cost(forward_propagation(X_teste, parameters), Y_test_alt)
     test_prob = tf.nn.sigmoid(x= tf.transpose(forward_propagation(X_teste, parameters)))
     realTest_prob = tf.nn.sigmoid(x= tf.transpose(forward_propagation(Xteste, parameters)))
     # Initialize all the variables
@@ -269,25 +292,33 @@ def model(X_train, Y_train, X_teste, Y_test, Xteste, learning_rate = 0.0001,
         pred_test, probs_test = predict(test_prob.eval())
         
         prob_realtest = realTest_prob.eval()
-        #correct_prediction = tf.equal(tf.argmax(Z5), tf.argmax(Y))
+        #correct_prediction = tf.equal(pred, Y)
 
         # Calculate accuracy on the test set
-        accuracy = tf.reduce_mean(tf.cast(pred, "float"))
+        #accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
 
-        print ("Train Accuracy:", accuracy.eval({X: X_train, Y: Y_train}))
+        #print ("Train Accuracy:", accuracy.eval({X: X_train, Y: Y_train}))
         #print ("Test Accuracy:", accuracy.eval({X: X_teste, Y: Y_test}))
         print("Train Accuracy2:", accuracy2(pred, Y_train.T))
-        print("Test Accuracy2:", accuracy2(pred_test, Y_test.T))
+        print("Test Accuracy2:", accuracy2(pred_test, Y_test.T)) #Y_test.T
+        print("Test Cost:", cost_test.eval())
         
         return parameters, pred, probs, prob_realtest
 
 
 
 
-parameters = model(X_train, y_train, X_teste, y_test, Xteste)
+parameters, pred, probs, prob_realtest = model(X_train, y_train, X_teste, y_test, y_test_alt, Xteste)
 
 
 
+# Saving probabilities to send for testing
+#train['prob_'] = prob_train.T
+test['ATTRITION'] = prob_realtest
+
+send = test[['ID_CORRELATIVO','ATTRITION']]
+
+send.to_csv("output/testProb1.csv", index=False)
 
 
 
