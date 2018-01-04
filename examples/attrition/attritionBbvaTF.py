@@ -41,13 +41,19 @@ y_test_alt = y_test.copy()
 #N5 = 4
 #N6 = 2
 
-N1 = 120  
-N2 = 80
-N3 = 64
-N4 = 32
-N5 = 16
-N6 = 4
+#N1 = 32
+#N2 = 16
+#N3 = 64
+#N4 = 32
+#N5 = 16
+#N6 = 4
 
+N1 = 16
+N2 = 8
+N3 = 32
+N4 = 16
+N5 = 4
+N6 = 2
 
 
 # Functions of the model
@@ -203,7 +209,7 @@ def accuracy2(predictions, labels):
 
 # Model design ####
 def model(X_train, Y_train, X_teste, Y_test, Y_test_alt, Xteste, learning_rate = 0.0001,
-          num_epochs = 800, minibatch_size = 32, print_cost = True):
+          num_epochs = 1200, minibatch_size = 32, print_cost = True):
     """
     Implements a five-layer tensorflow neural network: 
         LINEAR->RELU->LINEAR->RELU->LINEAR->SOFTMAX.
