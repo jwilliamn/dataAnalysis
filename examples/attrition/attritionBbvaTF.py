@@ -48,12 +48,9 @@ y_test_alt = y_test.copy()
 #N5 = 16
 #N6 = 4
 
-N1 = 16
-N2 = 8
-N3 = 32
-N4 = 16
-N5 = 4
-N6 = 2
+N1 = 32
+N2 = 16
+N3 = 8
 
 
 # Functions of the model
@@ -81,13 +78,7 @@ def initialize_parameters(n_x):
     b2 = tf.get_variable(name="b2", shape=[N2, 1], initializer = tf.zeros_initializer())
     W3 = tf.get_variable(name="W3", shape=[N3, N2], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
     b3 = tf.get_variable(name="b3", shape=[N3, 1], initializer = tf.zeros_initializer())
-    W4 = tf.get_variable(name="W4", shape=[N4, N3], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
-    b4 = tf.get_variable(name="b4", shape=[N4, 1], initializer = tf.zeros_initializer())
-    W5 = tf.get_variable(name="W5", shape=[N5, N4], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
-    b5 = tf.get_variable(name="b5", shape=[N5, 1], initializer = tf.zeros_initializer())
-    W6 = tf.get_variable(name="W6", shape=[N6, N5], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
-    b6 = tf.get_variable(name="b6", shape=[N6, 1], initializer = tf.zeros_initializer())
-    W7 = tf.get_variable(name="W7", shape=[1, N6], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
+    W7 = tf.get_variable(name="W7", shape=[1, N3], initializer = tf.contrib.layers.xavier_initializer(seed = 1))
     b7 = tf.get_variable(name="b7", shape=[1, 1], initializer = tf.zeros_initializer())
     
     parameters = {"W1": W1,
@@ -96,12 +87,6 @@ def initialize_parameters(n_x):
                   "b2": b2,
                   "W3": W3,
                   "b3": b3,
-                  "W4": W4,
-                  "b4": b4,
-                  "W5": W5,
-                  "b5": b5,
-                  "W6": W6,
-                  "b6": b6,
                   "W7": W7,
                   "b7": b7}
     
@@ -127,32 +112,18 @@ def forward_propagation(X, parameters):
     b2 = parameters['b2']
     W3 = parameters['W3']
     b3 = parameters['b3']
-    W4 = parameters['W4']
-    b4 = parameters['b4']
-    W5 = parameters['W5']
-    b5 = parameters['b5']
-    W6 = parameters['W6']
-    b6 = parameters['b6']
     W7 = parameters['W7']
     b7 = parameters['b7']
     
     # Forward propagation
     Z1 = tf.add(tf.matmul(W1, X), b1)
     A1 = tf.nn.relu(Z1)
-    A1 = tf.nn.dropout(A1, keep_prob=0.6)
     Z2 = tf.add(tf.matmul(W2, A1), b2)
     A2 = tf.nn.relu(Z2)
-    A2 = tf.nn.dropout(A2, keep_prob=0.8)
     Z3 = tf.add(tf.matmul(W3, A2), b3)
     A3 = tf.nn.relu(Z3)
-    A3 = tf.nn.dropout(A3, keep_prob=0.8)
-    Z4 = tf.add(tf.matmul(W4, A3), b4)
-    A4 = tf.nn.relu(Z4)
-    Z5 = tf.add(tf.matmul(W5, A4), b5)
-    A5 = tf.nn.relu(Z5)
-    Z6 = tf.add(tf.matmul(W6, A5), b6)
-    A6 = tf.nn.relu(Z6)
-    oL = tf.add(tf.matmul(W7, A6), b7)
+    A3 = tf.nn.dropout(A3, keep_prob=0.5)
+    oL = tf.add(tf.matmul(W7, A3), b7)
     
     return oL
 
@@ -208,8 +179,8 @@ def accuracy2(predictions, labels):
 #print_cost = True
 
 # Model design ####
-def model(X_train, Y_train, X_teste, Y_test, Y_test_alt, Xteste, learning_rate = 0.0001,
-          num_epochs = 1200, minibatch_size = 32, print_cost = True):
+def model(X_train, Y_train, X_teste, Y_test, Y_test_alt, Xteste, learning_rate = 0.001,
+          num_epochs = 1200, minibatch_size = 256, print_cost = True):
     """
     Implements a five-layer tensorflow neural network: 
         LINEAR->RELU->LINEAR->RELU->LINEAR->SOFTMAX.

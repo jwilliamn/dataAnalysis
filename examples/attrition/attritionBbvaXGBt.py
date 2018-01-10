@@ -53,6 +53,8 @@ X_train, X_test, Xtest = X_train.T, X_test.T, Xtest.T
 y_train, y_test = np.ravel(y_train.T), np.ravel(y_test.T)
 #plt.matshow(pd.DataFrame(X_train).corr())
 
+# Autoencoder implementation 
+
 
 # Instantiate the XGBClassifier: xg_cl
 xg_cl = xgb.XGBClassifier(learning_rate=0.09, max_depth=6, objective='binary:logistic', n_estimators=1200, seed=123)
