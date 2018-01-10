@@ -25,11 +25,13 @@
 import numpy as np
 import pandas as pd
 
+from scipy import stats
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from fancyimpute import MICE
 
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 
@@ -39,6 +41,32 @@ test = pd.read_csv('input/test_clientes.csv')
 
 train_req = pd.read_csv('input/train_requerimientos.csv')
 test_req = pd.read_csv('input/test_requerimientos.csv')
+
+
+# Raw analysis
+#sns.distplot(train['SDO_ACTIVO_MENOS1'])
+#plt.show()
+
+# Colored scatterplot
+tmp = train[train['SDO_ACTIVO_MENOS0'] < 100000]
+sns.lmplot(x="SDO_ACTIVO_MENOS0", y="NRO_ACCES_CANAL3_MENOS1", data=tmp, fit_reg=False, hue="ATTRITION", scatter_kws={"s": 10})
+plt.legend(loc='lower right')
+plt.show()
+
+
+# A scatterplot with jitter
+sns.stripplot(tmp.ANTIGUEDAD, tmp.SDO_ACTIVO_MENOS0, jitter=0.2, size=2)
+plt.title('jitter when x data are not really continuous')
+plt.show()
+
+
+# 2D density plot:
+sns.kdeplot(tmp.SDO_ACTIVO_MENOS0, tmp.SDO_ACTIVO_MENOS1, cmap="Reds", shade=True)
+plt.title('2D density graph', loc='center')
+plt.show()
+
+sns.distplot(tmp['SDO_ACTIVO_MENOS0'], kde=False, fit=stats.gamma)
+plt.show()
 
 
 # Exploratory Analysis ####
