@@ -159,11 +159,19 @@ Y = train['ATTRITION']
 Y = np.array(Y)
 
 # Assuming train_ as the whole dataset, then split it into tiny train and test set
-X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size = 0.1)
+X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size = 0.2)
+X_train1 = np.delete(X_train, np.s_[2,  3,  4,  5,  6,  7,  8,  9, 17, 18, 19, 20, 21, 22, 23, 24,
+       25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40], axis=1)
+X_train2 = X_train[:, [2,  3,  4,  5,  6,  7,  8,  9, 17, 18, 19, 20, 21, 22, 23, 24,
+       25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40]]
 
 # Feature scaling ####
-scaler = StandardScaler().fit(X_train)
-X_train = scaler.transform(X_train)
+# tmp_ = [train_.columns.get_loc(c) for c in train_.columns if train_[c].max() > 1]
+#scaler = StandardScaler()
+scaler = StandardScaler().fit(X_train2)
+X_train2 = scaler.transform(X_train2)
+X_train = np.concatenate((X_train1, X_train2), axis = 1)
+
 X_test = scaler.transform(X_test)
 
 Xtest = scaler.transform(Xtest)
